@@ -1,4 +1,4 @@
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { getSite } from "@/lib/site";
 import { formatPhoneBR } from "@/lib/phone";
 import { saveSiteContent } from "@/app/actions/admin";

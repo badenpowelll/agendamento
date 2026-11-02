@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import type { AppointmentStatus, Role } from "@prisma/client";
-import { requireStaff } from "@/lib/context";
+import type { AppointmentStatus, StaffRole } from "@prisma/client";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { prisma } from "@/lib/db";
 import { parseBRLToCents } from "@/lib/money";
@@ -15,6 +15,7 @@ import { siteContentSchema, parseSiteContent } from "@/lib/site-content";
 import { audit } from "@/domain/audit";
 import { createBooking, rescheduleAppointment, transitionAppointment } from "@/domain/booking";
 import { DomainError } from "@/domain/errors";
+import { createStaffUser, resetStaffPassword, setStaffActive, setStaffRole } from "@/domain/staff";
 import { processOutbox, retryDeadMessage } from "@/domain/outbox";
 import { after } from "next/server";
 
@@ -260,16 +261,56 @@ export async function saveSettings(_p: AdminState, f: FormData): Promise<AdminSt
   }
 }
 
-export async function setMemberRole(membershipId: string, role: Role): Promise<AdminState> {
+// ---------- Equipe e licenças ----------
+
+export type StaffState = AdminState & { tempPassword?: string; forEmail?: string };
+
+export async function createStaffAction(_p: StaffState, f: FormData): Promise<StaffState> {
+  const ctx = await requireStaff("ADMIN");
+  try {
+    const role = (["OWNER", "ADMIN", "STAFF"].includes(str(f, "role")) ? str(f, "role") : "STAFF") as StaffRole;
+    const { staff, tempPassword } = await createStaffUser(ctx.tenant.id, ctx.staff, { name: str(f, "name"), email: str(f, "email"), role, professionalId: str(f, "professionalId") || null });
+    await audit(ctx.tenant.id, ctx.user.id, "staff.create", "StaffUser", staff.id, { email: staff.email, role });
+    revalidatePath("/admin/equipe");
+    return { ok: "Acesso criado. Envie a senha provisória para a colaboradora; ela vai trocar no primeiro acesso.", tempPassword, forEmail: staff.email };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function setStaffActiveAction(staffId: string, active: boolean): Promise<AdminState> {
+  const ctx = await requireStaff("ADMIN");
+  try {
+    await setStaffActive(ctx.tenant.id, ctx.staff, staffId, active);
+    await audit(ctx.tenant.id, ctx.user.id, active ? "staff.activate" : "staff.deactivate", "StaffUser", staffId);
+    revalidatePath("/admin/equipe");
+    return { ok: active ? "Licença liberada." : "Acesso desativado." };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function resetStaffPasswordAction(staffId: string): Promise<StaffState> {
+  const ctx = await requireStaff("ADMIN");
+  try {
+    const tempPassword = await resetStaffPassword(ctx.tenant.id, ctx.staff, staffId);
+    await audit(ctx.tenant.id, ctx.user.id, "staff.reset_password", "StaffUser", staffId);
+    return { ok: "Senha redefinida.", tempPassword };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function setStaffRoleAction(staffId: string, role: StaffRole): Promise<AdminState> {
   const ctx = await requireStaff("OWNER");
-  const db = forTenant(ctx.tenant.id);
-  const m = await db.membership.findFirst({ where: { id: membershipId } });
-  if (!m) return { error: "Usuário não encontrado." };
-  if (m.userId === ctx.user.id) return { error: "Você não pode alterar o seu próprio papel." };
-  await db.membership.update({ where: { id: m.id }, data: { role } });
-  await audit(ctx.tenant.id, ctx.user.id, "membership.role", "Membership", m.id, { role });
-  revalidatePath("/admin/configuracoes");
-  return { ok: "Papel atualizado." };
+  try {
+    await setStaffRole(ctx.tenant.id, ctx.staff, staffId, role);
+    await audit(ctx.tenant.id, ctx.user.id, "staff.role", "StaffUser", staffId, { role });
+    revalidatePath("/admin/equipe");
+    return { ok: "Papel atualizado." };
+  } catch (e) {
+    return fail(e);
+  }
 }
 
 // ---------- Mensagens ----------

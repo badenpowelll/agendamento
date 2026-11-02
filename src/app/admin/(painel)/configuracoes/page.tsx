@@ -1,15 +1,11 @@
-import { requireStaff } from "@/lib/context";
-import { forTenant } from "@/lib/tenant-db";
+import { requireStaff } from "@/lib/staff-session";
 import { saveSettings } from "@/app/actions/admin";
 import { AdminForm } from "@/components/admin-form";
-import { RoleSelect } from "@/components/role-select";
 import { Card, Field, Input, PageTitle } from "@/components/ui";
 
-export default async function Configuracoes({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
+export default async function Configuracoes() {
   const ctx = await requireStaff("OWNER");
   const t = ctx.tenant;
-  const members = await forTenant(t.id).membership.findMany({ where: email.trim() ? { user: { email: { equals: email.trim(), mode: "insensitive" } } } : { role: { not: "CLIENT" } }, include: { user: { select: { email: true, name: true } } }, orderBy: { createdAt: "asc" } });
   return (
     <div className="space-y-6">
       <PageTitle title="Configurações" />
@@ -26,17 +22,6 @@ export default async function Configuracoes({ searchParams }: { searchParams: Pr
             <Field label="E-mail para avisos de novas reservas e cancelamentos"><Input type="email" name="notificationEmail" defaultValue={t.notificationEmail ?? ""} /></Field>
           </div>
         </AdminForm>
-      </Card>
-      <Card>
-        <h2 className="mb-1 font-display text-lg">Equipe</h2>
-        <p className="mb-3 text-xs text-muted">Para dar acesso ao painel: a pessoa entra no site com o Google uma vez; depois busque o e-mail dela aqui e mude o papel. E-mails em ADMIN_EMAILS viram proprietárias automaticamente.</p>
-        <form className="mb-3 flex gap-2"><Input name="email" type="email" defaultValue={email} placeholder="Buscar por e-mail" aria-label="Buscar usuário por e-mail" /></form>
-        {email && members.length === 0 && <p className="text-sm text-muted">Nenhum usuário com este e-mail entrou no site ainda.</p>}
-        <div className="divide-y divide-line text-sm">
-          {members.map((m) => (
-            <div key={m.id} className="flex items-center justify-between py-2"><span>{m.user.name ?? m.user.email} <span className="text-muted">{m.user.email}</span></span><RoleSelect id={m.id} role={m.role} disabled={m.userId === ctx.user.id} /></div>
-          ))}
-        </div>
       </Card>
     </div>
   );

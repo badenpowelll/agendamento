@@ -1,4 +1,4 @@
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { prisma } from "@/lib/db";
 import { formatDateTime } from "@/lib/time";

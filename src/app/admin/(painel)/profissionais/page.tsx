@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { saveProfessional } from "@/app/actions/admin";
 import { AdminForm } from "@/components/admin-form";

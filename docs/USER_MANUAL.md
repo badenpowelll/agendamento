@@ -3,8 +3,12 @@
 ## Para a Milly e a equipe
 
 ### Primeiro acesso
-1. Entre no site com sua conta Google. Se seu e-mail estiver configurado como administrador, o link **Painel** aparece no topo.
-2. Na **Visão geral**, siga a lista "Antes de divulgar o link de agendamento".
+1. Acesse `/admin/entrar` com o e-mail cadastrado e a senha provisória recebida.
+2. Crie sua própria senha (pelo menos 10 caracteres, com letras e números).
+3. Na **Visão geral**, siga a lista "Antes de divulgar o link de agendamento".
+
+### Equipe (gestora)
+Painel → Equipe → informe nome e e-mail da colaboradora. O sistema mostra uma senha provisória uma única vez: envie por um canal privado. Use **Desativar acesso** / **Liberar licença** para controlar quem entra, e **Redefinir senha** se alguém esquecer.
 
 ### Serviços
 Painel → Serviços → informe nome, preço, duração e o tempo de preparo após o atendimento (limpeza da sala, por exemplo). O preparo bloqueia a agenda, mas não aparece para a cliente. Serviço inativo some do site.

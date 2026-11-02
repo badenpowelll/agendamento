@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { formatDateTime } from "@/lib/time";
 import { formatBRL } from "@/lib/money";

@@ -24,6 +24,7 @@ model Tenant {
   slotStepMinutes       Int @default(15)   // grade de horários oferecidos
   maxDaysAhead          Int @default(60)
   notificationEmail     String?            // e-mail que recebe avisos da administração
+  staffSeatLimit        Int?               // licenças de colaboradoras ativas (null = sem limite)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
 
@@ -33,6 +34,7 @@ model Tenant {
   services      Service[]
   appointments  Appointment[]
   siteContent   SiteContent?
+  staffUsers    StaffUser[]
 }
 
 enum Role {
@@ -56,7 +58,53 @@ model Membership {
   @@index([userId])
 }
 
-// ---------- Auth.js (login Google) ----------
+// ---------- Equipe (painel administrativo: e-mail e senha) ----------
+// A gestora é cadastrada previamente (npm run staff:create) e libera as colaboradoras pelo painel.
+// Separado de User: clientes entram com Google; a equipe nunca usa o Google para o painel.
+
+enum StaffRole {
+  OWNER // gestora
+  ADMIN
+  STAFF // colaboradora
+}
+
+model StaffUser {
+  id                 String    @id @default(cuid())
+  tenantId           String
+  email              String
+  name               String
+  passwordHash       String
+  role               StaffRole @default(STAFF)
+  active             Boolean   @default(true) // licença liberada
+  mustChangePassword Boolean   @default(true)
+  failedLogins       Int       @default(0)
+  lockedUntil        DateTime? @db.Timestamptz(3)
+  lastLoginAt        DateTime? @db.Timestamptz(3)
+  professionalId     String?   // vínculo opcional com a agenda da profissional
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions StaffSession[]
+
+  @@unique([tenantId, email])
+}
+
+model StaffSession {
+  id          String   @id @default(cuid())
+  tenantId    String
+  staffUserId String
+  tokenHash   String   @unique // SHA-256 do token do cookie; o token em si não é guardado
+  expiresAt   DateTime @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  userAgent   String?
+
+  staffUser StaffUser @relation(fields: [staffUserId], references: [id], onDelete: Cascade)
+
+  @@index([staffUserId])
+}
+
+// ---------- Auth.js (login Google das clientes) ----------
 
 model User {
   id            String    @id @default(cuid())

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { getSite } from "@/lib/site";
 import { dayRange, formatDateTime, formatTime, toLocalDate } from "@/lib/time";

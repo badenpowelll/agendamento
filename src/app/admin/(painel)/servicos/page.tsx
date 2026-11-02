@@ -1,4 +1,4 @@
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { formatBRL } from "@/lib/money";
 import { saveService } from "@/app/actions/admin";

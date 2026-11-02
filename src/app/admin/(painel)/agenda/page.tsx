@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { randomUUID } from "node:crypto";
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { addDays, dayRange, formatTime, isIsoDate, toLocalDate, weekdayOf } from "@/lib/time";
 import { STATUS_LABEL } from "@/domain/appointment-state";

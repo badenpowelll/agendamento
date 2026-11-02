@@ -9,16 +9,17 @@ Esta é a **Etapa 1 (MVP operacional)**: site público, login Google, cadastro c
 Requisitos: Node 20.18+, PostgreSQL 14+ com a extensão `btree_gist` (vem no PostgreSQL padrão e no Railway).
 
 ```bash
-cp .env.example .env        # preencha DATABASE_URL, AUTH_SECRET, AUTH_GOOGLE_ID/SECRET, ADMIN_EMAILS
+cp .env.example .env        # preencha DATABASE_URL, AUTH_SECRET, AUTH_GOOGLE_ID/SECRET
 npm install
 npm run db:migrate          # aplica as migrations
 npm run db:seed             # cria o estabelecimento (sem dados comerciais)
 npm run db:seed:demo        # opcional, só local: serviços e profissional de DEMONSTRAÇÃO
+npm run staff:create -- --email gestora@exemplo.com --name "Nome"   # cadastra a gestora e mostra a senha provisória
 npm run dev                 # http://localhost:3000
 npm run worker              # em outro terminal: envia confirmações e lembretes
 ```
 
-Entre com uma conta Google listada em `ADMIN_EMAILS` para acessar `/admin`.
+**Clientes** entram com Google. **A equipe** entra em `/admin/entrar` com e-mail e senha: a gestora é cadastrada previamente pelo comando acima e, no painel (Equipe), cria os acessos e libera as licenças das colaboradoras.
 
 ## Scripts
 

@@ -13,7 +13,7 @@
 
 1. Novo projeto → **Deploy from GitHub repo** → `milly-rodrigues-360`.
 2. Adicione **PostgreSQL** ao projeto. Em Variables do app, `DATABASE_URL=${{Postgres.DATABASE_URL}}`.
-3. Variáveis do app (ver `.env.example`): `APP_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `ADMIN_EMAILS`, `CRON_SECRET`, `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`.
+3. Variáveis do app (ver `.env.example`): `APP_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `CRON_SECRET`, `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`.
 4. O `railway.json` já define: build `npm ci && npm run build`, start `npm run railway:start` (aplica migrations, garante o estabelecimento e sobe o Next.js).
 5. **Fila de mensagens** (escolha uma):
    - Serviço *Cron* no Railway, mesmo repositório, schedule `*/5 * * * *`, comando `npm run worker -- --once`, com as mesmas variáveis; ou
@@ -26,7 +26,8 @@ Verifique o domínio (registros SPF/DKIM no DNS) e use um remetente desse domín
 
 ## 4. Homologação antes de produção
 
-- [ ] Login Google com a conta da Milly (vira OWNER via `ADMIN_EMAILS`)
+- [ ] Gestora cadastrada: `railway run npm run staff:create -- --email ... --name ...`; primeiro acesso em `/admin/entrar` com troca da senha provisória
+- [ ] Login Google de uma cliente de teste
 - [ ] Serviços, profissionais e horários cadastrados com dados reais
 - [ ] Endereço, WhatsApp, políticas e e-mail de avisos preenchidos
 - [ ] Agendamento de teste recebido por e-mail; lembrete aparece em Mensagens

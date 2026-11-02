@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { OutboxStatus } from "@prisma/client";
-import { requireStaff } from "@/lib/context";
+import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { formatDateTime } from "@/lib/time";
 import { RetryButton } from "@/components/retry-button";

@@ -16,6 +16,8 @@ export const TENANT_MODELS = new Set<string>([
   "SiteContent",
   "OutboxMessage",
   "AuditLog",
+  "StaffUser",
+  "StaffSession",
 ]);
 
 const WHERE_MANY = new Set(["findMany", "findFirst", "findFirstOrThrow", "count", "aggregate", "groupBy", "updateMany", "deleteMany", "updateManyAndReturn"]);

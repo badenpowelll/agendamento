@@ -4,8 +4,10 @@
 
 | Área | Controle |
 | --- | --- |
-| Autenticação | Google OIDC via Auth.js; escopos `openid email profile`; sessões no banco (revogáveis), cookie httpOnly/secure |
-| Autorização | RBAC por estabelecimento (OWNER, ADMIN, STAFF, CLIENT) verificado no servidor em toda página e ação |
+| Autenticação de clientes | Google OIDC via Auth.js; escopos `openid email profile`; sessões no banco (revogáveis), cookie httpOnly/secure |
+| Autenticação da equipe | E-mail e senha (scrypt com salt), senha provisória trocada no primeiro acesso, bloqueio de 15 min após 5 erros, sessão de 12 h com token só em hash no banco, cookie `__Host-` httpOnly; desativar acesso encerra as sessões |
+| Licenças | A gestora cria e libera acessos; limite opcional de colaboradoras ativas por estabelecimento (`Tenant.staffSeatLimit`) |
+| Autorização | Papéis da equipe (Gestora, Administradora, Colaboradora) verificados no servidor em toda página e ação; clientes Google nunca acessam o painel |
 | Multiempresa | `forTenant()` injeta `tenantId` em leituras, escritas e criações; impede mover registros entre estabelecimentos; testes dedicados |
 | Integridade | Restrição de exclusão no PostgreSQL, idempotência, atualização condicional de status |
 | Entrada | Validação com Zod em todas as ações; HTML de e-mail escapado; URLs de imagens só `https://` |

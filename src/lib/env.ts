@@ -6,12 +6,6 @@ export const env = {
   get defaultTenantSlug() {
     return process.env.DEFAULT_TENANT_SLUG ?? "milly-rodrigues";
   },
-  get adminEmails(): string[] {
-    return (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
-  },
   get secret() {
     const s = process.env.AUTH_SECRET;
     if (!s && process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET não configurado");
