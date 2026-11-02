@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getSite, whatsappLink } from "@/lib/site";
+import { WhatsappIcon } from "./instagram";
 
 export async function SiteFooter() {
   const site = await getSite();
@@ -13,8 +14,8 @@ export async function SiteFooter() {
           {site.contact.address && <p className="mt-1">{site.contact.address}</p>}
         </div>
         <ul className="space-y-1.5">
-          {site.contact.instagram && <li><a className="hover:text-ink" href={site.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram</a></li>}
-          {site.contact.whatsapp && <li><a className="hover:text-ink" href={whatsappLink(site.contact.whatsapp)} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
+          {site.contact.instagram && <li><a className="hover:text-ink" href={site.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram{site.contact.instagram.match(/instagram\.com\/([\w.]+)/) ? ` @${site.contact.instagram.match(/instagram\.com\/([\w.]+)/)![1]}` : ""}</a></li>}
+          {site.contact.whatsapp && <li><a className="hover:text-ink" href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined)} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
           {site.contact.email && <li><a className="hover:text-ink" href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>}
         </ul>
         <ul className="space-y-1.5">
@@ -23,6 +24,17 @@ export async function SiteFooter() {
           <li className="pt-2 text-xs">© {year} {site.brand.displayName}</li>
         </ul>
       </div>
+      {site.contact.whatsapp && (
+        <a
+          href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Falar no WhatsApp"
+          className="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-white shadow-lg transition hover:scale-105"
+        >
+          <WhatsappIcon />
+        </a>
+      )}
     </footer>
   );
 }

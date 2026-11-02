@@ -3,6 +3,7 @@ import { getSite, whatsappLink } from "@/lib/site";
 import { forTenant } from "@/lib/tenant-db";
 import { formatBRL } from "@/lib/money";
 import { ButtonLink, Card, EmptyState } from "@/components/ui";
+import { InstagramIcon, instagramHandle } from "@/components/instagram";
 
 export default async function Home() {
   const tenant = await getTenant();
@@ -11,20 +12,62 @@ export default async function Home() {
   const gallery = site.gallery.filter((g) => g.authorized && g.url);
   const testimonials = site.testimonials.filter((t) => t.authorized && t.text);
 
+  const wa = site.contact.whatsapp ? whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined) : "";
+  const igHandle = instagramHandle(site.contact.instagram);
+  const photos = gallery.slice(0, 5);
+
   return (
-    <div className="space-y-16 py-10 sm:py-16">
-      <section className="text-center">
-        <p className="text-sm uppercase tracking-[0.2em] text-brand">Depilação e Estética</p>
-        <h1 className="mt-3 font-display text-4xl leading-tight text-ink sm:text-6xl">{site.brand.displayName}</h1>
-        {site.brand.tagline && <p className="mx-auto mt-4 max-w-xl text-lg text-muted">{site.brand.tagline}</p>}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ButtonLink href="/agendar" className="px-7 py-3 text-base">Agendar meu horário</ButtonLink>
-          {site.contact.whatsapp && (
-            <ButtonLink href={whatsappLink(site.contact.whatsapp, "Olá! Gostaria de tirar uma dúvida.")} variant="secondary" className="px-7 py-3 text-base" target="_blank" rel="noopener noreferrer">
-              Falar no WhatsApp
-            </ButtonLink>
-          )}
+    <div className="space-y-20 pb-10">
+      <section className="relative mx-[calc(50%-50vw)] overflow-hidden bg-gradient-to-br from-blush via-cream to-rose/60 px-4 py-14 sm:py-20">
+        <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-[1.1fr_0.9fr]">
+          <div className="text-center md:text-left">
+            <p className="inline-block rounded-full bg-white/80 px-4 py-1 text-xs font-medium uppercase tracking-[0.2em] text-brand">Depilação e Estética</p>
+            <h1 className="mt-5 font-display text-4xl leading-tight text-ink sm:text-6xl">{site.brand.displayName}</h1>
+            {site.brand.tagline && <p className="mt-4 max-w-xl text-lg text-muted md:mx-0 mx-auto">{site.brand.tagline}</p>}
+            <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
+              <ButtonLink href="/agendar" className="px-7 py-3 text-base shadow-lg shadow-brand/25">Agendar meu horário</ButtonLink>
+              {wa && (
+                <ButtonLink href={wa} variant="secondary" className="px-7 py-3 text-base" target="_blank" rel="noopener noreferrer">
+                  Falar no WhatsApp
+                </ButtonLink>
+              )}
+            </div>
+            {site.contact.instagram && (
+              <a href={site.contact.instagram} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-brand hover:underline">
+                <InstagramIcon /> {igHandle ? `@${igHandle}` : "Instagram"}
+              </a>
+            )}
+          </div>
+          <div className={photos[0] ? "relative mx-auto w-full max-w-sm" : "relative mx-auto hidden w-full max-w-sm md:block"}>
+            <div className="absolute -inset-3 rotate-3 rounded-[2rem] bg-brand/20" aria-hidden />
+            {photos[0] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photos[0].url} alt={photos[0].alt} className="relative aspect-[4/5] w-full rounded-[2rem] object-cover shadow-xl" />
+            ) : (
+              <div className="relative flex aspect-[4/5] w-full flex-col items-center justify-center rounded-[2rem] bg-gradient-to-b from-brand to-brand-dark p-8 text-center text-white shadow-xl">
+                <p className="font-display text-3xl">{site.brand.displayName}</p>
+                <p className="mt-2 text-sm uppercase tracking-[0.2em] text-white/80">Depilação e Estética</p>
+              </div>
+            )}
+          </div>
         </div>
+      </section>
+
+      <section aria-labelledby="como-funciona" className="mx-auto max-w-5xl">
+        <h2 id="como-funciona" className="text-center font-display text-3xl">Como agendar</h2>
+        <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+          {[
+            ["1", "Escolha o serviço", "Veja a lista de serviços e escolha o que deseja."],
+            ["2", "Escolha dia e horário", "Só aparecem horários realmente livres na agenda."],
+            ["3", "Receba a confirmação", "Você recebe a confirmação e um lembrete antes do atendimento."],
+          ].map(([n, t, d]) => (
+            <li key={n} className="rounded-3xl border border-line bg-white p-6 text-center">
+              <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blush font-display text-lg text-brand">{n}</span>
+              <p className="mt-3 font-medium">{t}</p>
+              <p className="mt-1 text-sm text-muted">{d}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {(site.about.title || site.about.text) && (
@@ -34,7 +77,7 @@ export default async function Home() {
         </section>
       )}
 
-      <section id="servicos" aria-labelledby="servicos-titulo" className="scroll-mt-20">
+      <section id="servicos" aria-labelledby="servicos-titulo" className="mx-auto max-w-5xl scroll-mt-20">
         <h2 id="servicos-titulo" className="text-center font-display text-3xl">Serviços</h2>
         {services.length === 0 ? (
           <div className="mt-6"><EmptyState>Os serviços serão publicados em breve.</EmptyState></div>
@@ -59,15 +102,27 @@ export default async function Home() {
         )}
       </section>
 
-      {gallery.length > 0 && (
-        <section aria-labelledby="galeria">
-          <h2 id="galeria" className="text-center font-display text-3xl">Galeria</h2>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {gallery.map((g, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={g.url} alt={g.alt} loading="lazy" className="aspect-square w-full rounded-2xl object-cover" />
-            ))}
-          </div>
+      {(photos.length > 0 || site.contact.instagram) && (
+        <section aria-labelledby="galeria" className="mx-auto max-w-5xl">
+          <h2 id="galeria" className="text-center font-display text-3xl">No Instagram</h2>
+          {igHandle && <p className="mt-2 text-center text-muted">Acompanhe os resultados e novidades em @{igHandle}</p>}
+          {photos.length > 0 && (
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {photos.map((g, i) => (
+                <a key={i} href={site.contact.instagram || g.url} target="_blank" rel="noopener noreferrer" className={i === 0 ? "col-span-2 sm:col-span-1" : ""}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={g.url} alt={g.alt} loading="lazy" className="aspect-square w-full rounded-2xl object-cover transition hover:opacity-90" />
+                </a>
+              ))}
+            </div>
+          )}
+          {site.contact.instagram && (
+            <div className="mt-8 text-center">
+              <ButtonLink href={site.contact.instagram} target="_blank" rel="noopener noreferrer" className="px-6 py-3">
+                <InstagramIcon /> Seguir no Instagram
+              </ButtonLink>
+            </div>
+          )}
         </section>
       )}
 
@@ -96,7 +151,7 @@ export default async function Home() {
         </section>
       )}
 
-      <section id="contato" aria-labelledby="contato-titulo" className="scroll-mt-20">
+      <section id="contato" aria-labelledby="contato-titulo" className="mx-auto max-w-5xl scroll-mt-20">
         <Card className="grid gap-6 p-6 sm:grid-cols-2 sm:p-8">
           <div>
             <h2 id="contato-titulo" className="font-display text-3xl">Contato</h2>
@@ -105,10 +160,10 @@ export default async function Home() {
             <div className="mt-5 flex flex-wrap gap-2">
               {site.contact.mapsUrl && <ButtonLink href={site.contact.mapsUrl} variant="secondary" target="_blank" rel="noopener noreferrer">Ver no mapa</ButtonLink>}
               {site.contact.instagram && <ButtonLink href={site.contact.instagram} variant="secondary" target="_blank" rel="noopener noreferrer">Instagram</ButtonLink>}
-              {site.contact.whatsapp && <ButtonLink href={whatsappLink(site.contact.whatsapp)} variant="secondary" target="_blank" rel="noopener noreferrer">WhatsApp</ButtonLink>}
+              {site.contact.whatsapp && <ButtonLink href={wa} variant="secondary" target="_blank" rel="noopener noreferrer">WhatsApp</ButtonLink>}
             </div>
           </div>
-          <div className="flex flex-col justify-center rounded-2xl bg-cream p-6 text-center">
+          <div className="flex flex-col justify-center rounded-2xl bg-blush p-6 text-center">
             <p className="font-display text-2xl">Pronta para agendar?</p>
             <p className="mt-2 text-sm text-muted">Escolha o serviço, o dia e o horário em menos de um minuto.</p>
             <ButtonLink href="/agendar" className="mx-auto mt-5">Agendar agora</ButtonLink>

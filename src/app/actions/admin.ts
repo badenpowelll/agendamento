@@ -210,9 +210,9 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
     if (whatsapp === null) throw new DomainError("PHONE", "WhatsApp inválido.");
     const policiesChanged = current.policies.privacy !== str(f, "privacy") || current.policies.terms !== str(f, "terms");
     const data = siteContentSchema.parse({
-      brand: { displayName: str(f, "displayName") || "Milly Rodrigues", tagline: str(f, "tagline"), logoUrl: str(f, "logoUrl"), primaryColor: str(f, "primaryColor") || "#9d5c63" },
+      brand: { displayName: str(f, "displayName") || "Milly Rodrigues", tagline: str(f, "tagline"), logoUrl: str(f, "logoUrl"), primaryColor: str(f, "primaryColor") || "#e0457b" },
       about: { title: str(f, "aboutTitle"), text: str(f, "aboutText") },
-      contact: { whatsapp, instagram: str(f, "instagram"), email: str(f, "email"), address: str(f, "address"), mapsUrl: str(f, "mapsUrl"), hoursText: str(f, "hoursText") },
+      contact: { whatsapp, whatsappMessage: str(f, "whatsappMessage"), instagram: str(f, "instagram"), email: str(f, "email"), address: str(f, "address"), mapsUrl: str(f, "mapsUrl"), hoursText: str(f, "hoursText") },
       gallery: lines(str(f, "gallery")).map((l) => { const [url, alt = ""] = l.split("|").map((x) => x.trim()); return { url, alt, authorized }; }),
       testimonials: lines(str(f, "testimonials")).map((l) => { const [author, ...rest] = l.split("|"); return { author: author.trim(), text: rest.join("|").trim(), authorized }; }),
       faq: str(f, "faq").split(/\n-{3,}\n/).map((b) => b.trim()).filter(Boolean).map((b) => { const [q, ...a] = b.split("\n"); return { q: q.trim(), a: a.join("\n").trim() }; }),
@@ -225,7 +225,7 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
       legal: { companyName: str(f, "companyName"), document: str(f, "document") },
     });
     for (const u of [data.brand.logoUrl, data.contact.instagram, data.contact.mapsUrl, ...data.gallery.map((g) => g.url)]) {
-      if (u && !/^https:\/\//.test(u)) throw new DomainError("URL", `Endereço precisa começar com https:// (${u.slice(0, 40)})`);
+      if (u && !/^https:\/\//.test(u) && !/^\/(galeria|marca)\/[\w.-]+$/.test(u)) throw new DomainError("URL", `Endereço precisa começar com https:// (${u.slice(0, 40)})`);
     }
     await db.siteContent.upsert({ where: { tenantId: ctx.tenant.id }, create: { data } as never, update: { data } });
     await audit(ctx.tenant.id, ctx.user.id, "site.update", "SiteContent", null, { policiesVersion: data.policies.version });

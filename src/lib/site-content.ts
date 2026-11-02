@@ -9,14 +9,15 @@ export const siteContentSchema = z.object({
     displayName: z.string().max(80).default("Milly Rodrigues"),
     tagline: z.string().max(160).default(""),
     logoUrl: z.string().max(500).default(""),
-    primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#9d5c63"),
+    primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#e0457b"),
   }),
   about: z.object({
     title: z.string().max(120).default(""),
     text: z.string().max(4000).default(""),
   }),
   contact: z.object({
-    whatsapp: z.string().max(30).default(""), // E.164, ex.: +5584999999999
+    whatsapp: z.string().max(30).default("+5584999279661"), // E.164 (informado pelo Baden em 02/11/2026)
+    whatsappMessage: z.string().max(200).default("Oi, quero agendar minha epilação"),
     instagram: z.string().max(200).default("https://www.instagram.com/depilacao_millyrodrigues"),
     email: z.string().max(200).default(""),
     address: z.string().max(300).default(""),

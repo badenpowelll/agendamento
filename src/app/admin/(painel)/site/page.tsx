@@ -30,6 +30,7 @@ export default async function SiteEditor() {
           <h2 className="font-display text-lg">Contato e localização</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="WhatsApp"><Input name="whatsapp" defaultValue={formatPhoneBR(s.contact.whatsapp)} inputMode="tel" /></Field>
+            <Field label="Mensagem pronta do WhatsApp"><Input name="whatsappMessage" defaultValue={s.contact.whatsappMessage} maxLength={200} /></Field>
             <Field label="E-mail"><Input name="email" type="email" defaultValue={s.contact.email} /></Field>
             <Field label="Instagram (link)"><Input name="instagram" defaultValue={s.contact.instagram} /></Field>
             <Field label="Link do Google Maps"><Input name="mapsUrl" defaultValue={s.contact.mapsUrl} /></Field>
