@@ -20,6 +20,7 @@ export default async function SiteEditor() {
           </div>
           <Field label="Frase de apresentação"><Input name="tagline" defaultValue={s.brand.tagline} /></Field>
           <Field label="Endereço da logo (https://…)"><Input name="logoUrl" defaultValue={s.brand.logoUrl} /></Field>
+            <Field label="Marca d’água (foto ao fundo das páginas)" hint="https://… ou /marca/arquivo.jpg. Deixe vazio para não usar."><Input name="watermarkUrl" defaultValue={s.brand.watermarkUrl} /></Field>
         </Card>
         <Card className="space-y-4">
           <h2 className="font-display text-lg">Sobre</h2>

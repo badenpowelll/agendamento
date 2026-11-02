@@ -210,7 +210,7 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
     if (whatsapp === null) throw new DomainError("PHONE", "WhatsApp inválido.");
     const policiesChanged = current.policies.privacy !== str(f, "privacy") || current.policies.terms !== str(f, "terms");
     const data = siteContentSchema.parse({
-      brand: { displayName: str(f, "displayName") || "Milly Rodrigues", tagline: str(f, "tagline"), logoUrl: str(f, "logoUrl"), primaryColor: str(f, "primaryColor") || "#e0457b" },
+      brand: { displayName: str(f, "displayName") || "Milly Rodrigues", tagline: str(f, "tagline"), logoUrl: str(f, "logoUrl"), watermarkUrl: str(f, "watermarkUrl"), primaryColor: str(f, "primaryColor") || "#e0457b" },
       about: { title: str(f, "aboutTitle"), text: str(f, "aboutText") },
       contact: { whatsapp, whatsappMessage: str(f, "whatsappMessage"), instagram: str(f, "instagram"), email: str(f, "email"), address: str(f, "address"), mapsUrl: str(f, "mapsUrl"), hoursText: str(f, "hoursText") },
       gallery: lines(str(f, "gallery")).map((l) => { const [url, alt = ""] = l.split("|").map((x) => x.trim()); return { url, alt, authorized }; }),
@@ -224,7 +224,7 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
       },
       legal: { companyName: str(f, "companyName"), document: str(f, "document") },
     });
-    for (const u of [data.brand.logoUrl, data.contact.instagram, data.contact.mapsUrl, ...data.gallery.map((g) => g.url)]) {
+    for (const u of [data.brand.logoUrl, data.brand.watermarkUrl, data.contact.instagram, data.contact.mapsUrl, ...data.gallery.map((g) => g.url)]) {
       if (u && !/^https:\/\//.test(u) && !/^\/(galeria|marca)\/[\w.-]+$/.test(u)) throw new DomainError("URL", `Endereço precisa começar com https:// (${u.slice(0, 40)})`);
     }
     await db.siteContent.upsert({ where: { tenantId: ctx.tenant.id }, create: { data } as never, update: { data } });

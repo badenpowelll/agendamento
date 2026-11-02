@@ -9,6 +9,7 @@ export const siteContentSchema = z.object({
     displayName: z.string().max(80).default("Milly Rodrigues"),
     tagline: z.string().max(160).default(""),
     logoUrl: z.string().max(500).default(""),
+    watermarkUrl: z.string().max(500).default(""), // foto clarinha ao fundo de todas as páginas
     primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#e0457b"),
   }),
   about: z.object({

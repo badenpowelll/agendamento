@@ -16,13 +16,22 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#faf6f3" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#e0457b" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const site = await getSite();
   return (
     <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`} style={{ ["--brand" as string]: site.brand.primaryColor }}>
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        {site.brand.watermarkUrl && (
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-0 -z-10 bg-center bg-no-repeat opacity-[0.07] [background-size:min(78vmin,720px)] grayscale-[30%]"
+            style={{ backgroundImage: `url("${site.brand.watermarkUrl.replace(/["\\()]/g, "")}")` }}
+          />
+        )}
+        {children}
+      </body>
     </html>
   );
 }
