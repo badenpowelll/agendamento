@@ -45,7 +45,7 @@ export default async function Home() {
               <img src={photos[0].url} alt={photos[0].alt} className="relative aspect-[4/5] w-full rounded-[2rem] object-cover shadow-xl" />
             ) : site.brand.watermarkUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={site.brand.watermarkUrl} alt={`Selo ${site.brand.displayName}`} className="relative aspect-square w-full rounded-full bg-white/90 object-contain p-6 shadow-xl" />
+              <img src={site.brand.watermarkUrl} alt={`Selo ${site.brand.displayName}`} className="relative aspect-square w-full rounded-full bg-white/90 object-contain p-3 shadow-xl" />
             ) : (
               <div className="relative flex aspect-[4/5] w-full flex-col items-center justify-center rounded-[2rem] bg-gradient-to-b from-brand to-brand-dark p-8 text-center text-white shadow-xl">
                 <p className="font-display text-3xl">{site.brand.displayName}</p>

@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:P;src:url(playfair.woff2) format("woff2");font-weight:400 900}
+html,body{margin:0;background:transparent}
+</style></head><body>
+<svg id="s" xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">
+<defs>
+<linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a46a"/><stop offset=".5" stop-color="#a87f45"/><stop offset="1" stop-color="#d6b98a"/></linearGradient>
+<path id="top" d="M 500 500 m -360 0 a 360 360 0 1 1 720 0"/>
+<path id="bot" d="M 88 470 A 415 415 0 0 0 912 470"/>
+</defs>
+<circle cx="500" cy="500" r="470" fill="none" stroke="url(#g)" stroke-width="5"/>
+<circle cx="500" cy="500" r="455" fill="none" stroke="url(#g)" stroke-width="1.5"/>
+<circle cx="500" cy="500" r="300" fill="none" stroke="url(#g)" stroke-width="3"/>
+<image href="retrato.png" x="215" y="215" width="570" height="570"/>
+<text font-family="P" font-size="86" font-weight="500" fill="url(#g)" letter-spacing="10" text-anchor="middle"><textPath href="#top" startOffset="50%">MILLY RODRIGUES</textPath></text>
+<g id="bottom"></g>
+<g fill="url(#g)">
+<circle cx="138" cy="500" r="9"/><circle cx="862" cy="500" r="9"/>
+</g>
+</svg>
+<script>
+document.fonts.load('500 58px P').then(()=>{
+  const NS='http://www.w3.org/2000/svg', g=document.getElementById('bottom'), txt='DEPILAÇÃO E ESTÉTICA';
+  const R=372, size=58, spacing=8;
+  const m=document.createElementNS(NS,'text'); m.setAttribute('font-family','P'); m.setAttribute('font-size',size); m.setAttribute('font-weight','500'); g.appendChild(m);
+  const widths=[...txt].map(ch=>{m.textContent=ch===' '?'\u00a0':ch; return m.getComputedTextLength()+spacing;});
+  g.removeChild(m);
+  const total=widths.reduce((a,b)=>a+b,0)-spacing;
+  let a=Math.PI/2 + (total/2)/R; // start on the left of bottom, go counter-clockwise visually (right)
+  [...txt].forEach((ch,i)=>{
+    const w=widths[i]-spacing, mid=a-(w/2)/R;
+    const x=500+R*Math.cos(mid), y=500+R*Math.sin(mid);
+    const t=document.createElementNS(NS,'text'); t.textContent=ch; t.setAttribute('font-family','P'); t.setAttribute('font-size',size); t.setAttribute('font-weight','500'); t.setAttribute('fill','url(#g)'); t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+    t.setAttribute('transform',`translate(${x} ${y}) rotate(${mid*180/Math.PI-90})`); g.appendChild(t);
+    a-=widths[i]/R;
+  });
+  document.body.dataset.ready='1';
+});
+</script></body></html>
