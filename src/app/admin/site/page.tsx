@@ -1,0 +1,61 @@
+import { requireStaff } from "@/lib/context";
+import { getSite } from "@/lib/site";
+import { formatPhoneBR } from "@/lib/phone";
+import { saveSiteContent } from "@/app/actions/admin";
+import { AdminForm } from "@/components/admin-form";
+import { Card, Field, Input, PageTitle, Textarea } from "@/components/ui";
+
+export default async function SiteEditor() {
+  await requireStaff("ADMIN");
+  const s = await getSite();
+  return (
+    <div className="space-y-6">
+      <PageTitle title="Conteúdo do site" subtitle="Tudo o que aparece no site público. Campos vazios não são exibidos." />
+      <AdminForm action={saveSiteContent} submit="Salvar site" className="space-y-6">
+        <Card className="space-y-4">
+          <h2 className="font-display text-lg">Marca</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Nome exibido"><Input name="displayName" defaultValue={s.brand.displayName} /></Field>
+            <Field label="Cor principal"><Input name="primaryColor" type="color" defaultValue={s.brand.primaryColor} className="h-11 p-1" /></Field>
+          </div>
+          <Field label="Frase de apresentação"><Input name="tagline" defaultValue={s.brand.tagline} /></Field>
+          <Field label="Endereço da logo (https://…)"><Input name="logoUrl" defaultValue={s.brand.logoUrl} /></Field>
+        </Card>
+        <Card className="space-y-4">
+          <h2 className="font-display text-lg">Sobre</h2>
+          <Field label="Título"><Input name="aboutTitle" defaultValue={s.about.title} /></Field>
+          <Field label="Texto"><Textarea name="aboutText" defaultValue={s.about.text} rows={5} /></Field>
+        </Card>
+        <Card className="space-y-4">
+          <h2 className="font-display text-lg">Contato e localização</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="WhatsApp"><Input name="whatsapp" defaultValue={formatPhoneBR(s.contact.whatsapp)} inputMode="tel" /></Field>
+            <Field label="E-mail"><Input name="email" type="email" defaultValue={s.contact.email} /></Field>
+            <Field label="Instagram (link)"><Input name="instagram" defaultValue={s.contact.instagram} /></Field>
+            <Field label="Link do Google Maps"><Input name="mapsUrl" defaultValue={s.contact.mapsUrl} /></Field>
+          </div>
+          <Field label="Endereço completo"><Input name="address" defaultValue={s.contact.address} /></Field>
+          <Field label="Horário de funcionamento (texto exibido no site)"><Textarea name="hoursText" defaultValue={s.contact.hoursText} rows={3} /></Field>
+        </Card>
+        <Card className="space-y-4">
+          <h2 className="font-display text-lg">Galeria, avaliações e perguntas</h2>
+          <Field label="Galeria" hint="Uma foto por linha: https://link-da-foto | descrição"><Textarea name="gallery" rows={4} defaultValue={s.gallery.map((g) => `${g.url} | ${g.alt}`).join("\n")} /></Field>
+          <Field label="Avaliações" hint="Uma por linha: Nome | texto da avaliação"><Textarea name="testimonials" rows={4} defaultValue={s.testimonials.map((t) => `${t.author} | ${t.text}`).join("\n")} /></Field>
+          <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="mediaAuthorized" className="mt-0.5 accent-brand" defaultChecked={s.gallery.concat().every((g) => g.authorized) && s.testimonials.every((t) => t.authorized) && (s.gallery.length + s.testimonials.length > 0)} /> Confirmo que tenho autorização das pessoas para publicar estas fotos e avaliações. Sem esta confirmação, elas não aparecem no site.</label>
+          <Field label="Perguntas frequentes" hint="Pergunta na primeira linha, resposta nas seguintes. Separe cada pergunta com uma linha contendo ---"><Textarea name="faq" rows={8} defaultValue={s.faq.map((f) => `${f.q}\n${f.a}`).join("\n---\n")} /></Field>
+        </Card>
+        <Card className="space-y-4">
+          <h2 className="font-display text-lg">Políticas</h2>
+          <p className="text-xs text-muted">Versão atual: {s.policies.version}. Ao mudar a privacidade ou os termos, a versão aumenta e os novos aceites ficam registrados com ela. Revise os textos com um profissional jurídico.</p>
+          <Field label="Política de cancelamento, atraso e falta"><Textarea name="cancellation" rows={4} defaultValue={s.policies.cancellation} /></Field>
+          <Field label="Política de privacidade"><Textarea name="privacy" rows={8} defaultValue={s.policies.privacy} /></Field>
+          <Field label="Termos e condições"><Textarea name="terms" rows={8} defaultValue={s.policies.terms} /></Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Razão social"><Input name="companyName" defaultValue={s.legal.companyName} /></Field>
+            <Field label="CNPJ"><Input name="document" defaultValue={s.legal.document} /></Field>
+          </div>
+        </Card>
+      </AdminForm>
+    </div>
+  );
+}
