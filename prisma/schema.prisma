@@ -1,0 +1,380 @@
+// Milly Rodrigues 360° — modelo de dados
+// Regra geral: toda tabela de negócio tem tenantId. Dinheiro em centavos (Int). Datas em UTC (timestamptz).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Plataforma / multiempresa ----------
+
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  timezone  String   @default("America/Fortaleza")
+  active    Boolean  @default(true)
+  // Política de agendamento (editável no painel)
+  minLeadMinutes        Int @default(120)  // antecedência mínima para agendar
+  cancelMinHours        Int @default(12)   // antecedência mínima para a cliente cancelar/reagendar sozinha
+  slotStepMinutes       Int @default(15)   // grade de horários oferecidos
+  maxDaysAhead          Int @default(60)
+  notificationEmail     String?            // e-mail que recebe avisos da administração
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  memberships   Membership[]
+  customers     Customer[]
+  professionals Professional[]
+  services      Service[]
+  appointments  Appointment[]
+  siteContent   SiteContent?
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  STAFF
+  CLIENT
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+}
+
+// ---------- Auth.js (login Google) ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @db.Timestamptz(3)
+  image         String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  customers   Customer[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime @db.Timestamptz(3)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime @db.Timestamptz(3)
+
+  @@id([identifier, token])
+}
+
+// ---------- Clientes ----------
+
+model Customer {
+  id              String    @id @default(cuid())
+  tenantId        String
+  userId          String?
+  name            String
+  email           String?
+  phone           String?   // E.164, ex.: +5584999999999
+  phoneVerifiedAt DateTime? @db.Timestamptz(3)
+  allowEmail      Boolean   @default(true)  // mensagens transacionais por e-mail
+  allowWhatsapp   Boolean   @default(false) // mensagens transacionais por WhatsApp
+  allowMarketing  Boolean   @default(false) // campanhas (Fase 3)
+  birthDate       DateTime? @db.Date
+  notes           String?
+  profileComplete Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  appointments Appointment[]
+  consents     Consent[]
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, phone])
+  @@index([tenantId, email])
+}
+
+enum ConsentKind {
+  TERMS
+  PRIVACY
+  TRANSACTIONAL_EMAIL
+  TRANSACTIONAL_WHATSAPP
+  MARKETING
+}
+
+model Consent {
+  id         String      @id @default(cuid())
+  tenantId   String
+  customerId String
+  kind       ConsentKind
+  granted    Boolean
+  version    String      // versão do texto aceito
+  source     String      // ex.: "cadastro", "minha-conta"
+  createdAt  DateTime    @default(now()) @db.Timestamptz(3)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, customerId, kind])
+}
+
+// ---------- Catálogo e agenda ----------
+
+model Professional {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  bio       String?
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  services     ProfessionalService[]
+  workingHours WorkingHours[]
+  timeOffs     TimeOff[]
+  appointments Appointment[]
+
+  @@index([tenantId])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  priceCents  Int?     // null = "sob consulta"
+  durationMin Int
+  bufferMin   Int      @default(0) // preparo/limpeza após o atendimento
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  professionals ProfessionalService[]
+  appointments  Appointment[]
+
+  @@index([tenantId])
+}
+
+model ProfessionalService {
+  tenantId       String
+  professionalId String
+  serviceId      String
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, serviceId])
+  @@index([tenantId])
+}
+
+model WorkingHours {
+  id             String @id @default(cuid())
+  tenantId       String
+  professionalId String
+  weekday        Int    // 0 = domingo ... 6 = sábado
+  startMin       Int    // minutos desde 00:00 no fuso do estabelecimento
+  endMin         Int
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, professionalId, weekday])
+}
+
+model TimeOff {
+  id             String   @id @default(cuid())
+  tenantId       String
+  professionalId String?  // null = estabelecimento inteiro (feriado, por exemplo)
+  startAt        DateTime @db.Timestamptz(3)
+  endAt          DateTime @db.Timestamptz(3)
+  reason         String?
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  professional Professional? @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, startAt])
+}
+
+enum AppointmentStatus {
+  PENDING      // Pendente
+  CONFIRMED    // Confirmado
+  RECONFIRMED  // Presença reconfirmada
+  CHECKED_IN   // Cliente chegou
+  IN_SERVICE   // Em atendimento
+  COMPLETED    // Concluído
+  CANCELLED    // Cancelado
+  NO_SHOW      // Não compareceu
+  RESCHEDULED  // Reagendado (substituído por outra reserva)
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  tenantId        String
+  professionalId  String
+  customerId      String
+  serviceId       String
+  startAt         DateTime          @db.Timestamptz(3)
+  endAt           DateTime          @db.Timestamptz(3) // fim do atendimento
+  blockEndAt      DateTime          @db.Timestamptz(3) // fim do bloqueio (atendimento + preparo)
+  status          AppointmentStatus @default(CONFIRMED)
+  priceCents      Int?              // preço no momento da reserva
+  serviceName     String            // nome no momento da reserva
+  idempotencyKey  String
+  source          String            @default("site") // site | admin
+  notes           String?
+  rescheduledFromId String?         @unique
+  cancelReason    String?
+  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime          @updatedAt @db.Timestamptz(3)
+
+  tenant          Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  professional    Professional       @relation(fields: [professionalId], references: [id])
+  customer        Customer           @relation(fields: [customerId], references: [id])
+  service         Service            @relation(fields: [serviceId], references: [id])
+  rescheduledFrom Appointment?       @relation("Reschedule", fields: [rescheduledFromId], references: [id])
+  rescheduledTo   Appointment?       @relation("Reschedule")
+  events          AppointmentEvent[]
+
+  // A restrição de exclusão contra sobreposição é criada por SQL na migration
+  // (appointment_no_overlap). O Prisma não expressa EXCLUDE USING gist.
+  @@unique([tenantId, idempotencyKey])
+  @@index([tenantId, startAt])
+  @@index([tenantId, customerId])
+  @@index([professionalId, startAt])
+}
+
+enum ActorType {
+  CUSTOMER
+  STAFF
+  SYSTEM
+}
+
+model AppointmentEvent {
+  id            String             @id @default(cuid())
+  tenantId      String
+  appointmentId String
+  fromStatus    AppointmentStatus?
+  toStatus      AppointmentStatus
+  actorType     ActorType
+  actorUserId   String?
+  note          String?
+  createdAt     DateTime           @default(now()) @db.Timestamptz(3)
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, appointmentId])
+}
+
+// ---------- Conteúdo do site (editável no painel) ----------
+
+model SiteContent {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique
+  data      Json     // ver src/lib/site-content.ts para o formato
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Mensagens (fila persistente / outbox) ----------
+
+enum Channel {
+  EMAIL
+  WHATSAPP
+}
+
+enum OutboxStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED    // falhou, aguardando nova tentativa
+  DEAD      // esgotou as tentativas (fila de erros)
+  CANCELLED // não precisa mais ser enviada
+}
+
+model OutboxMessage {
+  id            String       @id @default(cuid())
+  tenantId      String
+  template      String       // ex.: booking_confirmation, reminder_24h, reminder_day, admin_new_booking
+  channel       Channel
+  recipient     String
+  appointmentId String?
+  dedupeKey     String       // garante que a mesma mensagem não seja enfileirada duas vezes
+  payload       Json
+  sendAfter     DateTime     @db.Timestamptz(3)
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  lastError     String?
+  lockedAt      DateTime?    @db.Timestamptz(3)
+  sentAt        DateTime?    @db.Timestamptz(3)
+  providerId    String?
+  createdAt     DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime     @updatedAt @db.Timestamptz(3)
+
+  @@unique([tenantId, dedupeKey])
+  @@index([status, sendAfter])
+  @@index([tenantId, appointmentId])
+}
+
+// ---------- Auditoria ----------
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  actorUserId String?
+  action      String
+  entity      String
+  entityId    String?
+  data        Json?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([tenantId, createdAt])
+}
