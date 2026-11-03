@@ -18,7 +18,7 @@ export const siteContentSchema = z.object({
   }),
   contact: z.object({
     whatsapp: z.string().max(30).default("+5584999279661"), // E.164 (informado pelo Baden em 02/11/2026)
-    whatsappMessage: z.string().max(200).default("Oi, quero agendar minha epilação"),
+    whatsappMessage: z.string().max(200).default("Oi, quero agendar minha depilação"),
     instagram: z.string().max(200).default("https://www.instagram.com/depilacao_millyrodrigues"),
     email: z.string().max(200).default(""),
     address: z.string().max(300).default(""),
