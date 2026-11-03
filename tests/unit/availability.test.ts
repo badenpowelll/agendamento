@@ -48,3 +48,18 @@ describe("computeSlots", () => {
     expect(computeSlots({ ...base, windows: [] })).toEqual([]);
   });
 });
+
+describe("computeSlotGrid", () => {
+  it("marca como ocupado o horário reservado e mantém os livres", async () => {
+    const { computeSlotGrid } = await import("@/domain/availability");
+    const { localDateMinutesToInstant } = await import("@/lib/time");
+    const tz = "America/Fortaleza";
+    const busyStart = localDateMinutesToInstant("2026-11-12", 9 * 60, tz);
+    const grid = computeSlotGrid({
+      date: "2026-11-12", timezone: tz, windows: [{ startMin: 8 * 60, endMin: 11 * 60 }],
+      busy: [{ start: busyStart, end: new Date(busyStart.getTime() + 60 * 60_000) }],
+      durationMin: 60, bufferMin: 0, stepMin: 60, now: new Date("2026-11-10T12:00:00Z"), minLeadMinutes: 0,
+    });
+    expect(grid.map((g) => g.free)).toEqual([true, false, true]);
+  });
+});

@@ -7,7 +7,7 @@ import { Button, Card, Notice, cx } from "@/components/ui";
 
 type Service = { id: string; name: string; description: string | null; durationMin: number; price: string };
 type Pro = { id: string; name: string; serviceIds: string[] };
-type Slot = { startAt: string; label: string; professionalIds: string[] };
+type Slot = { startAt: string; label: string; professionalIds: string[]; available?: boolean };
 
 const dayLabel = (d: string, tz: string) => {
   const dt = new Date(`${d}T12:00:00Z`);
@@ -50,13 +50,13 @@ export function BookingWizard(props: {
         const j = await r.json();
         if (!r.ok) throw new Error(j.error ?? "Erro");
         setSlots(j.slots);
-        setStartAt((cur) => (j.slots.some((s: Slot) => s.startAt === cur) ? cur : ""));
+        setStartAt((cur) => (j.slots.some((s: Slot) => s.startAt === cur && s.available !== false) ? cur : ""));
       })
       .catch((e) => e.name !== "AbortError" && setLoadError("Não foi possível carregar os horários. Tente novamente."));
     return () => ctrl.abort();
   }, [serviceId, professionalId, date, props.rescheduleId]);
 
-  const selectedSlot = slots?.find((s) => s.startAt === startAt);
+  const selectedSlot = slots?.find((s) => s.startAt === startAt && s.available !== false);
   const selectionQs = new URLSearchParams({ servico: serviceId, data: date, hora: startAt, ...(professionalId ? { profissional: professionalId } : {}), ...(props.rescheduleId ? { reagendar: props.rescheduleId } : {}) }).toString();
 
   function confirm() {
@@ -140,14 +140,25 @@ export function BookingWizard(props: {
           ) : slots.length === 0 ? (
             <Notice>Nenhum horário livre neste dia. Experimente outro dia.</Notice>
           ) : (
+            <>
+            {!slots.some((s) => s.available !== false) && <div className="mb-3"><Notice>Todos os horários deste dia já foram reservados. Experimente outro dia.</Notice></div>}
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6" role="radiogroup" aria-label="Horário">
-              {slots.map((s) => (
-                <button key={s.startAt} role="radio" aria-checked={s.startAt === startAt} onClick={() => setStartAt(s.startAt)}
-                  className={cx("rounded-xl border py-2 text-sm", s.startAt === startAt ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand/40")}>
-                  {s.label}
-                </button>
-              ))}
+              {slots.map((s) =>
+                s.available === false ? (
+                  <button key={s.startAt} type="button" role="radio" aria-checked={false} aria-disabled="true" disabled title="Horário já reservado"
+                    className="cursor-not-allowed rounded-xl border border-rose/60 bg-blush/70 py-1.5 text-sm text-brand/45">
+                    <span className="block leading-tight line-through">{s.label}</span>
+                    <span className="block text-[10px] leading-tight">ocupado</span>
+                  </button>
+                ) : (
+                  <button key={s.startAt} type="button" role="radio" aria-checked={s.startAt === startAt} onClick={() => setStartAt(s.startAt)}
+                    className={cx("rounded-xl border py-2 text-sm", s.startAt === startAt ? "border-brand bg-brand text-white" : "border-line bg-white hover:border-brand/40")}>
+                    {s.label}
+                  </button>
+                ),
+              )}
             </div>
+            </>
           )}
         </section>
       )}

@@ -2,7 +2,7 @@ import type { ActorType, Appointment, AppointmentStatus } from "@prisma/client";
 import { forTenant, isOverlapViolation, isUniqueViolation, type TenantDb, type TenantTx } from "@/lib/tenant-db";
 import { prisma } from "@/lib/db";
 import { addDays, addMinutes, dayRange, isIsoDate, toLocalDate, weekdayOf } from "@/lib/time";
-import { computeSlots, type Interval } from "./availability";
+import { computeSlotGrid, type Interval } from "./availability";
 import { ACTIVE_STATUSES, canTransition, UPCOMING_STATUSES } from "./appointment-state";
 import { DomainError, SlotUnavailableError } from "./errors";
 import { planBookingMessages, planCancellationMessages, type PlannedMessage } from "./messages";
@@ -34,11 +34,20 @@ export interface AvailableSlot {
 
 /** Horários disponíveis para um serviço em um dia (uma ou todas as profissionais habilitadas). */
 export async function getAvailability(tenantId: string, q: AvailabilityQuery, db: TenantDb | TenantTx = forTenant(tenantId)): Promise<AvailableSlot[]> {
+  return (await getSlotBoard(tenantId, q, db)).available;
+}
+
+/** Disponíveis + horários do expediente já ocupados (para mostrar como "ocupado" no site). */
+export async function getSlotBoard(
+  tenantId: string,
+  q: AvailabilityQuery,
+  db: TenantDb | TenantTx = forTenant(tenantId),
+): Promise<{ available: AvailableSlot[]; taken: Date[] }> {
   if (!isIsoDate(q.date)) throw new DomainError("INVALID_DATE", "Data inválida.");
   const tenant = await loadTenant(tenantId);
   const now = q.now ?? new Date();
   const today = toLocalDate(now, tenant.timezone);
-  if (q.date < today || q.date > addDays(today, tenant.maxDaysAhead)) return [];
+  if (q.date < today || q.date > addDays(today, tenant.maxDaysAhead)) return { available: [], taken: [] };
 
   const service = await db.service.findFirst({ where: { id: q.serviceId, active: true } });
   if (!service) throw new DomainError("SERVICE_NOT_FOUND", "Serviço não encontrado.");
@@ -48,7 +57,7 @@ export async function getAvailability(tenantId: string, q: AvailabilityQuery, db
     select: { professionalId: true },
   });
   const proIds = links.map((l) => l.professionalId);
-  if (proIds.length === 0) return [];
+  if (proIds.length === 0) return { available: [], taken: [] };
 
   const { start, end } = dayRange(q.date, tenant.timezone);
   const weekday = weekdayOf(q.date, tenant.timezone);
@@ -70,12 +79,13 @@ export async function getAvailability(tenantId: string, q: AvailabilityQuery, db
   ]);
 
   const byStart = new Map<number, string[]>();
+  const inGrid = new Set<number>();
   for (const pid of proIds) {
     const busy: Interval[] = [
       ...offs.filter((o) => o.professionalId === null || o.professionalId === pid).map((o) => ({ start: o.startAt, end: o.endAt })),
       ...appts.filter((a) => a.professionalId === pid).map((a) => ({ start: a.startAt, end: a.blockEndAt })),
     ];
-    const slots = computeSlots({
+    const grid = computeSlotGrid({
       date: q.date,
       timezone: tenant.timezone,
       windows: hours.filter((h) => h.professionalId === pid),
@@ -86,9 +96,14 @@ export async function getAvailability(tenantId: string, q: AvailabilityQuery, db
       now,
       minLeadMinutes: tenant.minLeadMinutes,
     });
-    for (const s of slots) byStart.set(s.getTime(), [...(byStart.get(s.getTime()) ?? []), pid]);
+    for (const g of grid) {
+      inGrid.add(g.start.getTime());
+      if (g.free) byStart.set(g.start.getTime(), [...(byStart.get(g.start.getTime()) ?? []), pid]);
+    }
   }
-  return [...byStart.entries()].sort(([a], [b]) => a - b).map(([t, ids]) => ({ startAt: new Date(t), professionalIds: ids }));
+  const available = [...byStart.entries()].sort(([a], [b]) => a - b).map(([t, ids]) => ({ startAt: new Date(t), professionalIds: ids }));
+  const taken = [...inGrid].filter((t) => !byStart.has(t)).sort((a, b) => a - b).map((t) => new Date(t));
+  return { available, taken };
 }
 
 export interface BookingInput {

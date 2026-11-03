@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getTenant } from "@/lib/context";
 import { rateLimit } from "@/lib/rate-limit";
-import { getAvailability } from "@/domain/booking";
+import { getSlotBoard } from "@/domain/booking";
 import { DomainError } from "@/domain/errors";
 import { formatTime } from "@/lib/time";
 
@@ -16,9 +16,14 @@ export async function GET(req: NextRequest) {
   const ignore = sp.get("ignore") || undefined;
   try {
     const tenant = await getTenant();
-    const slots = await getAvailability(tenant.id, { serviceId, professionalId, date, ignoreAppointmentId: ignore });
+    const { available, taken } = await getSlotBoard(tenant.id, { serviceId, professionalId, date, ignoreAppointmentId: ignore });
+    const slots = [
+      ...available.map((s) => ({ startAt: s.startAt.toISOString(), label: formatTime(s.startAt, tenant.timezone), professionalIds: s.professionalIds, available: true })),
+      // Horários ocupados aparecem desabilitados; não expõem quem reservou.
+      ...taken.map((t) => ({ startAt: t.toISOString(), label: formatTime(t, tenant.timezone), professionalIds: [] as string[], available: false })),
+    ].sort((a, b) => a.startAt.localeCompare(b.startAt));
     return NextResponse.json(
-      { timezone: tenant.timezone, slots: slots.map((s) => ({ startAt: s.startAt.toISOString(), label: formatTime(s.startAt, tenant.timezone), professionalIds: s.professionalIds })) },
+      { timezone: tenant.timezone, slots },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
