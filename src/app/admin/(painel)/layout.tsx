@@ -19,6 +19,7 @@ const NAV: { group: string; items: Item[] }[] = [
   ] },
   { group: "Relacionamento", items: [
     { href: "/admin/fidelizacao", label: "Fidelização", soon: true },
+    { href: "/admin/retornos", label: "Retornos" },
     { href: "/admin/automacoes", label: "Automações" },
     { href: "/admin/mensagens", label: "Mensagens" },
   ] },

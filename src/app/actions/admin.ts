@@ -328,3 +328,12 @@ export async function markPhoneVerified(customerId: string) {
   await audit(ctx.tenant.id, ctx.user.id, "customer.phone_verified", "Customer", customerId);
   revalidatePath(`/admin/clientes/${customerId}`);
 }
+
+/** Registra que a equipe avisou a cliente sobre o retorno (aparece na lista de Retornos). */
+export async function markReturnContacted(customerId: string) {
+  const ctx = await requireStaff("STAFF");
+  const c = await forTenant(ctx.tenant.id).customer.findFirst({ where: { id: customerId }, select: { id: true } });
+  if (!c) return;
+  await audit(ctx.tenant.id, ctx.user.id, "customer.return_contacted", "Customer", customerId);
+  revalidatePath("/admin/retornos");
+}
