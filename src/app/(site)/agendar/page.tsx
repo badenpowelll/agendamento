@@ -36,7 +36,7 @@ export default async function Agendar({ searchParams }: { searchParams: Promise<
       <PageTitle title={reschedule ? "Reagendar" : "Agendar horário"} subtitle={reschedule ? `Atual: ${reschedule.label}` : "Escolha o serviço, o dia e o horário."} />
       {sp.reagendar && !reschedule && <div className="mb-4"><Notice tone="error">Agendamento não encontrado para reagendar. Entre com a conta usada no agendamento.</Notice></div>}
       {services.length === 0 ? (
-        <EmptyState>O agendamento online está em preparação. Para marcar agora, {site.contact.whatsapp ? <a className="text-brand underline" href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage)} target="_blank" rel="noopener noreferrer">chame no WhatsApp</a> : "fale com a gente"}.</EmptyState>
+        <EmptyState>O agendamento online está em preparação. Para marcar agora, {site.contact.whatsapp ? <a data-wa className="text-brand underline" href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage)} target="_blank" rel="noopener noreferrer">chame no WhatsApp</a> : "fale com a gente"}.</EmptyState>
       ) : (
         <BookingWizard
           services={services.map((s) => { const d = pay ? depositCents(s.priceCents, pay.depositPercent) : null; return { id: s.id, name: s.name, category: s.category, description: s.description, durationMin: s.durationMin, price: formatBRL(s.priceCents), deposit: d != null ? formatBRL(d) : null }; })}

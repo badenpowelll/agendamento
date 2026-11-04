@@ -27,7 +27,7 @@ export default async function Home() {
             <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
               <ButtonLink href="/agendar" className="px-7 py-3 text-base shadow-lg shadow-brand/25">Agendar meu horário</ButtonLink>
               {wa && (
-                <ButtonLink href={wa} variant="secondary" className="px-7 py-3 text-base" target="_blank" rel="noopener noreferrer">
+                <ButtonLink data-wa href={wa} variant="secondary" className="px-7 py-3 text-base" target="_blank" rel="noopener noreferrer">
                   Falar no WhatsApp
                 </ButtonLink>
               )}
@@ -101,7 +101,10 @@ export default async function Home() {
                         )}
                         {s.description && <p className="text-xs text-muted">{s.description}</p>}
                       </div>
-                      <span className="whitespace-nowrap font-medium text-brand">{formatBRL(s.priceCents)}</span>
+                      <span className="flex flex-col items-end gap-0.5">
+                        <span className="whitespace-nowrap font-medium text-brand">{formatBRL(s.priceCents)}</span>
+                        {wa && <a data-wa data-wa-service={s.name} data-wa-reason={s.durationMin >= 5 ? "info" : "agendar"} href={wa} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap text-xs text-muted hover:text-brand">Chamar no WhatsApp</a>}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -172,7 +175,7 @@ export default async function Home() {
             <div className="mt-5 flex flex-wrap gap-2">
               {site.contact.mapsUrl && <ButtonLink href={site.contact.mapsUrl} variant="secondary" target="_blank" rel="noopener noreferrer">Ver no mapa</ButtonLink>}
               {site.contact.instagram && <ButtonLink href={site.contact.instagram} variant="secondary" target="_blank" rel="noopener noreferrer">Instagram</ButtonLink>}
-              {site.contact.whatsapp && <ButtonLink href={wa} variant="secondary" target="_blank" rel="noopener noreferrer">WhatsApp</ButtonLink>}
+              {site.contact.whatsapp && <ButtonLink data-wa href={wa} variant="secondary" target="_blank" rel="noopener noreferrer">WhatsApp</ButtonLink>}
             </div>
           </div>
           <div className="flex flex-col justify-center rounded-2xl bg-blush p-6 text-center">

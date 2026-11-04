@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { getSite, whatsappLink } from "@/lib/site";
 import { WhatsappIcon } from "./instagram";
+import { WhatsappComposer } from "./whatsapp-composer";
+import { getContext, getTenant } from "@/lib/context";
+import { forTenant } from "@/lib/tenant-db";
 
 export async function SiteFooter() {
   const site = await getSite();
+  const tenant = await getTenant();
+  const [services, ctx] = await Promise.all([
+    forTenant(tenant.id).service.findMany({ where: { active: true }, select: { name: true, category: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
+    getContext().catch(() => null),
+  ]);
   const year = new Date().getFullYear();
   return (
     <footer className="mt-16 border-t border-line bg-white">
@@ -15,7 +23,7 @@ export async function SiteFooter() {
         </div>
         <ul className="space-y-1.5">
           {site.contact.instagram && <li><a className="hover:text-ink" href={site.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram{site.contact.instagram.match(/instagram\.com\/([\w.]+)/) ? ` @${site.contact.instagram.match(/instagram\.com\/([\w.]+)/)![1]}` : ""}</a></li>}
-          {site.contact.whatsapp && <li><a className="hover:text-ink" href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined)} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
+          {site.contact.whatsapp && <li><a data-wa className="hover:text-ink" href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined)} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
           {site.contact.email && <li><a className="hover:text-ink" href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>}
         </ul>
         <ul className="space-y-1.5">
@@ -26,6 +34,7 @@ export async function SiteFooter() {
       </div>
       {site.contact.whatsapp && (
         <a
+          data-wa
           href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined)}
           target="_blank"
           rel="noopener noreferrer"
@@ -35,6 +44,7 @@ export async function SiteFooter() {
           <WhatsappIcon />
         </a>
       )}
+      {site.contact.whatsapp && <WhatsappComposer phone={site.contact.whatsapp} services={services} defaultName={ctx?.customer?.name} />}
     </footer>
   );
 }
