@@ -114,6 +114,7 @@ export async function periodReport(tenantId: string, from: string, to: string): 
 /** Automações ativas na Etapa 1 e suas estatísticas de execução (a partir da fila de mensagens). */
 export const BUILTIN_AUTOMATIONS = [
   { template: "booking_confirmation", name: "Confirmação da reserva", trigger: "Reserva criada", wait: "Imediato", recipient: "Cliente" },
+  { template: "deposit_confirmed", name: "Sinal recebido", trigger: "Equipe confirma o sinal", wait: "Imediato", recipient: "Cliente" },
   { template: "admin_new_booking", name: "Aviso de nova reserva", trigger: "Reserva criada", wait: "Imediato", recipient: "Administração" },
   { template: "reminder_24h", name: "Lembrete 24h antes", trigger: "24h antes do atendimento", wait: "Até 24h antes", recipient: "Cliente" },
   { template: "reminder_day", name: "Lembrete no dia", trigger: "Dia do atendimento", wait: "07:30 do dia", recipient: "Cliente" },

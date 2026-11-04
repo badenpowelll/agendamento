@@ -7,7 +7,7 @@ import { RetryButton } from "@/components/retry-button";
 import { Badge, Card, EmptyState, PageTitle, cx } from "@/components/ui";
 
 const LABEL: Record<OutboxStatus, string> = { PENDING: "Agendada", SENDING: "Enviando", SENT: "Enviada", FAILED: "Nova tentativa", DEAD: "Falhou", CANCELLED: "Cancelada" };
-const TEMPLATE: Record<string, string> = { booking_confirmation: "Confirmação", reminder_24h: "Lembrete 24h", reminder_day: "Lembrete do dia", booking_cancelled: "Cancelamento", admin_new_booking: "Aviso: nova reserva", admin_cancelled: "Aviso: cancelamento" };
+const TEMPLATE: Record<string, string> = { booking_confirmation: "Confirmação", reminder_24h: "Lembrete 24h", reminder_day: "Lembrete do dia", booking_cancelled: "Cancelamento", admin_new_booking: "Aviso: nova reserva", admin_cancelled: "Aviso: cancelamento", deposit_confirmed: "Sinal recebido" };
 
 export default async function Mensagens({ searchParams }: { searchParams: Promise<{ status?: OutboxStatus }> }) {
   const { status } = await searchParams;

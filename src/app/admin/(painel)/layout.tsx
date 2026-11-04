@@ -7,6 +7,7 @@ const NAV: { group: string; items: Item[] }[] = [
   { group: "Operação", items: [
     { href: "/admin", label: "Visão geral" },
     { href: "/admin/agenda", label: "Agenda" },
+    { href: "/admin/sinais", label: "Sinais pendentes" },
     { href: "/admin/clientes", label: "Clientes" },
     { href: "/admin/servicos", label: "Serviços" },
     { href: "/admin/profissionais", label: "Profissionais" },

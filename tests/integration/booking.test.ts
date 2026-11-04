@@ -137,6 +137,8 @@ describe("sinal pendente", () => {
     expect(moved.status).toBe("PENDING");
     const ok = await transitionAppointment(tenant.id, moved.id, "CONFIRMED", { type: "STAFF" }, { now: NOW });
     expect(ok.status).toBe("CONFIRMED");
+    const msgs = await prisma.outboxMessage.findMany({ where: { appointmentId: moved.id, template: "deposit_confirmed" } });
+    expect(msgs.length).toBeGreaterThan(0);
   });
 
   it("serviço sem duração definida não pode ser agendado", async () => {

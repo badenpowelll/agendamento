@@ -23,3 +23,17 @@ export function depositLines(site: SiteContent, priceCents: number | null | unde
     "Seu horário será confirmado somente após o pagamento do sinal.",
   ];
 }
+
+/** Prazo final para pagar o sinal de uma reserva. */
+export function depositDeadline(createdAt: Date, hours: number): Date {
+  return new Date(createdAt.getTime() + hours * 3_600_000);
+}
+
+/** Mensagem de cobrança gentil do sinal, enviada pela equipe no WhatsApp. */
+export function depositReminderMessage(input: { firstName: string; service: string; when: string; amount: string | null; pixKey: string; pixName: string; deadline: string }): string {
+  return [
+    `Olá, ${input.firstName}! Recebemos sua reserva de ${input.service} para ${input.when}.`,
+    `Para confirmar o horário, falta o sinal${input.amount ? ` de ${input.amount}` : ""} via Pix: ${input.pixKey}${input.pixName ? ` (${input.pixName})` : ""}.`,
+    `O prazo é até ${input.deadline}. Seu horário será confirmado somente após o pagamento do sinal.`,
+  ].join("\n");
+}

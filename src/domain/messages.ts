@@ -12,7 +12,8 @@ export type TemplateName =
   | "reminder_day"
   | "booking_cancelled"
   | "admin_new_booking"
-  | "admin_cancelled";
+  | "admin_cancelled"
+  | "deposit_confirmed";
 
 export interface PlannedMessage {
   template: TemplateName;
@@ -71,6 +72,22 @@ export function planBookingMessages(
     });
   }
   return out;
+}
+
+/** Sinal recebido: a cliente é avisada de que o horário está confirmado. */
+export function planDepositConfirmedMessages(
+  appt: Pick<Appointment, "id">,
+  customer: Pick<Customer, "email" | "allowEmail" | "phone" | "phoneVerifiedAt" | "allowWhatsapp">,
+  now: Date,
+): PlannedMessage[] {
+  return customerChannels(customer).map(({ channel, recipient }) => ({
+    template: "deposit_confirmed" as const,
+    channel,
+    recipient,
+    sendAfter: now,
+    appointmentId: appt.id,
+    dedupeKey: `${appt.id}:deposit_confirmed:${channel}`,
+  }));
 }
 
 export function planCancellationMessages(
@@ -143,6 +160,10 @@ export function renderMessage(template: TemplateName, ctx: RenderContext): Rende
       ];
       break;
     }
+    case "deposit_confirmed":
+      subject = `${brand}: sinal recebido, horário confirmado`;
+      lines = [`Olá, ${firstName}! Recebemos o seu sinal e seu horário está confirmado.`, "", ...details, ...(place ? ["", `Onde: ${place}`] : []), "", `Para reagendar ou cancelar: ${link}`];
+      break;
     case "reminder_24h":
       subject = `${brand}: lembrete do seu horário amanhã às ${time}`;
       lines = [`Olá, ${firstName}! Lembrete do seu atendimento.`, "", ...details, "", `Confirme sua presença ou reagende aqui: ${link}`];
@@ -173,7 +194,7 @@ export function renderMessage(template: TemplateName, ctx: RenderContext): Rende
 
 /** Mensagens que não fazem mais sentido se a reserva mudou de estado. */
 export function shouldSkip(template: TemplateName, status: Appointment["status"]): boolean {
-  const reminders: TemplateName[] = ["booking_confirmation", "reminder_24h", "reminder_day", "admin_new_booking"];
+  const reminders: TemplateName[] = ["booking_confirmation", "deposit_confirmed", "reminder_24h", "reminder_day", "admin_new_booking"];
   if (reminders.includes(template)) return !["PENDING", "CONFIRMED", "RECONFIRMED"].includes(status);
   if (template === "booking_cancelled" || template === "admin_cancelled") return status !== "CANCELLED";
   return false;

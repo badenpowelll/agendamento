@@ -5,7 +5,7 @@ import { addDays, addMinutes, dayRange, isIsoDate, toLocalDate, weekdayOf } from
 import { computeSlotGrid, type Interval } from "./availability";
 import { ACTIVE_STATUSES, canTransition, UPCOMING_STATUSES } from "./appointment-state";
 import { DomainError, SlotUnavailableError } from "./errors";
-import { planBookingMessages, planCancellationMessages, type PlannedMessage } from "./messages";
+import { planBookingMessages, planCancellationMessages, planDepositConfirmedMessages, type PlannedMessage } from "./messages";
 
 /** Serviço sem duração definida (0) aparece na tabela de preços, mas não pode ser agendado online. */
 export const MIN_BOOKABLE_MIN = 5;
@@ -244,6 +244,9 @@ export async function transitionAppointment(
     }
     if (to === "CANCELLED") {
       await enqueue(tx, planCancellationMessages(appt, appt.customer, tenant, now, true));
+    }
+    if (appt.status === "PENDING" && to === "CONFIRMED") {
+      await enqueue(tx, planDepositConfirmedMessages(appt, appt.customer, now));
     }
     return tx.appointment.findFirstOrThrow({ where: { id: appt.id } });
   });

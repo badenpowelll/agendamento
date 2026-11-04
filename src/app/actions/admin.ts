@@ -162,6 +162,7 @@ export async function staffTransition(appointmentId: string, to: AppointmentStat
     flushSoon();
     await audit(ctx.tenant.id, ctx.user.id, "appointment.status", "Appointment", appointmentId, { to, note });
     revalidatePath("/admin/agenda");
+    revalidatePath("/admin/sinais");
     revalidatePath("/admin");
     return { ok: "Atualizado." };
   } catch (e) {
