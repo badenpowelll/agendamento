@@ -85,23 +85,32 @@ export default async function Home() {
         {services.length === 0 ? (
           <div className="mt-6"><EmptyState>Os serviços serão publicados em breve.</EmptyState></div>
         ) : (
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-            {services.map((s) => (
-              <li key={s.id}>
-                <Card className="flex h-full flex-col">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-medium text-ink">{s.name}</h3>
-                    <span className="whitespace-nowrap font-medium text-brand">{formatBRL(s.priceCents)}</span>
-                  </div>
-                  {s.description && <p className="mt-2 text-sm text-muted">{s.description}</p>}
-                  <div className="mt-auto flex items-center justify-between pt-4 text-sm">
-                    <span className="text-muted">{s.durationMin} min</span>
-                    <a className="font-medium text-brand hover:underline" href={`/agendar?servico=${s.id}`}>Agendar →</a>
-                  </div>
-                </Card>
-              </li>
+          <>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {groupByCategory(services).map(([cat, list]) => (
+              <Card key={cat || "_"} className="h-full">
+                {cat && <h3 className="mb-3 font-display text-xl text-brand">{cat}</h3>}
+                <ul className="divide-y divide-line">
+                  {list.map((s) => (
+                    <li key={s.id} className="flex items-start justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        {s.durationMin >= 5 ? (
+                          <a href={`/agendar?servico=${s.id}`} className="font-medium text-ink hover:text-brand">{s.name}</a>
+                        ) : (
+                          <span className="font-medium text-ink">{s.name}</span>
+                        )}
+                        {s.description && <p className="text-xs text-muted">{s.description}</p>}
+                      </div>
+                      <span className="whitespace-nowrap font-medium text-brand">{formatBRL(s.priceCents)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
             ))}
-          </ul>
+          </div>
+          {site.payment.methods && <p className="mt-4 text-center text-sm text-muted">Formas de pagamento: {site.payment.methods}</p>}
+          <div className="mt-6 text-center"><a href="/agendar" className="inline-block rounded-full bg-brand px-6 py-3 font-medium text-white hover:bg-brand-dark">Agendar horário</a></div>
+          </>
         )}
       </section>
 
@@ -175,4 +184,13 @@ export default async function Home() {
       </section>
     </div>
   );
+}
+
+function groupByCategory<T extends { category: string | null }>(list: T[]): [string, T[]][] {
+  const m = new Map<string, T[]>();
+  for (const s of list) {
+    const k = s.category?.trim() || "";
+    m.set(k, [...(m.get(k) ?? []), s]);
+  }
+  return [...m.entries()];
 }

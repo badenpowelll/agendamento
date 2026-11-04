@@ -1,4 +1,5 @@
 import type { Appointment, Channel, Customer, Tenant } from "@prisma/client";
+import { depositLines } from "@/lib/deposit";
 import { addMinutes, formatDateTime, formatTime, localDateMinutesToInstant, toLocalDate } from "@/lib/time";
 import { env } from "@/lib/env";
 import { createActionToken } from "@/lib/tokens";
@@ -128,10 +129,20 @@ export function renderMessage(template: TemplateName, ctx: RenderContext): Rende
   let subject: string;
   let lines: string[];
   switch (template) {
-    case "booking_confirmation":
-      subject = `${brand}: horário confirmado`;
-      lines = [`Olá, ${firstName}! Seu horário está confirmado.`, "", ...details, ...(place ? ["", `Onde: ${place}`] : []), "", `Para reconfirmar, reagendar ou cancelar: ${link}`];
+    case "booking_confirmation": {
+      const pix = a.status === "PENDING" ? depositLines(site, a.priceCents, formatBRL) : [];
+      subject = pix.length ? `${brand}: horário reservado, falta o sinal` : `${brand}: horário confirmado`;
+      lines = [
+        pix.length ? `Olá, ${firstName}! Recebemos sua reserva.` : `Olá, ${firstName}! Seu horário está confirmado.`,
+        "",
+        ...details,
+        ...(pix.length ? ["", ...pix] : []),
+        ...(place ? ["", `Onde: ${place}`] : []),
+        "",
+        `Para reconfirmar, reagendar ou cancelar: ${link}`,
+      ];
       break;
+    }
     case "reminder_24h":
       subject = `${brand}: lembrete do seu horário amanhã às ${time}`;
       lines = [`Olá, ${firstName}! Lembrete do seu atendimento.`, "", ...details, "", `Confirme sua presença ou reagende aqui: ${link}`];

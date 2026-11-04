@@ -126,3 +126,23 @@ describe("cancelamento e reagendamento", () => {
     expect(await prisma.appointmentEvent.count({ where: { appointmentId: appointment.id } })).toBe(2);
   });
 });
+
+describe("sinal pendente", () => {
+  it("reserva com sinal nasce 'aguardando sinal', segue assim ao reagendar e a equipe confirma", async () => {
+    const { tenant, service, professional } = await makeTenant("milly");
+    const c = await makeCustomer(tenant.id);
+    const { appointment } = await createBooking(tenant.id, { serviceId: service.id, professionalId: professional.id, startAt: SLOT, customerId: c.id, idempotencyKey: "p1", now: NOW, initialStatus: "PENDING" }, { type: "CUSTOMER" });
+    expect(appointment.status).toBe("PENDING");
+    const moved = await rescheduleAppointment(tenant.id, appointment.id, { startAt: new Date(SLOT.getTime() + 2 * 3600_000), idempotencyKey: "p2", now: NOW }, { type: "CUSTOMER" });
+    expect(moved.status).toBe("PENDING");
+    const ok = await transitionAppointment(tenant.id, moved.id, "CONFIRMED", { type: "STAFF" }, { now: NOW });
+    expect(ok.status).toBe("CONFIRMED");
+  });
+
+  it("serviço sem duração definida não pode ser agendado", async () => {
+    const { tenant, service, professional } = await makeTenant("milly");
+    await prisma.service.update({ where: { id: service.id }, data: { durationMin: 0 } });
+    const c = await makeCustomer(tenant.id);
+    await expect(createBooking(tenant.id, { serviceId: service.id, professionalId: professional.id, startAt: SLOT, customerId: c.id, idempotencyKey: "z", now: NOW }, { type: "CUSTOMER" })).rejects.toBeInstanceOf(DomainError);
+  });
+});

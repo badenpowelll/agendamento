@@ -47,6 +47,17 @@ export default async function SiteEditor() {
           <Field label="Perguntas frequentes" hint="Pergunta na primeira linha, resposta nas seguintes. Separe cada pergunta com uma linha contendo ---"><Textarea name="faq" rows={8} defaultValue={s.faq.map((f) => `${f.q}\n${f.a}`).join("\n---\n")} /></Field>
         </Card>
         <Card className="space-y-4">
+          <h2 className="font-display text-lg">Pagamento do sinal</h2>
+          <p className="text-xs text-muted">Com percentual acima de 0 e chave Pix preenchida, as reservas do site ficam &quot;Aguardando sinal&quot; até a equipe marcar &quot;Confirmar (sinal recebido)&quot; na agenda. Deixe 0 para confirmar na hora.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Chave Pix"><Input name="pixKey" defaultValue={s.payment.pixKey} maxLength={120} /></Field>
+            <Field label="Nome do recebedor (como aparece no banco)"><Input name="pixName" defaultValue={s.payment.pixName} maxLength={120} /></Field>
+            <Field label="Sinal (% do valor)"><Input name="depositPercent" type="number" min={0} max={100} defaultValue={s.payment.depositPercent} /></Field>
+            <Field label="Prazo para pagar (horas)"><Input name="depositHours" type="number" min={1} max={168} defaultValue={s.payment.depositHours} /></Field>
+          </div>
+          <Field label="Formas de pagamento"><Input name="paymentMethods" defaultValue={s.payment.methods} maxLength={300} /></Field>
+        </Card>
+        <Card className="space-y-4">
           <h2 className="font-display text-lg">Políticas</h2>
           <p className="text-xs text-muted">Versão atual: {s.policies.version}. Ao mudar a privacidade ou os termos, a versão aumenta e os novos aceites ficam registrados com ela. Revise os textos com um profissional jurídico.</p>
           <Field label="Política de cancelamento, atraso e falta"><Textarea name="cancellation" rows={4} defaultValue={s.policies.cancellation} /></Field>

@@ -10,11 +10,14 @@ function ServiceFields({ s }: { s?: Service }) {
   return (
     <>
       {s && <input type="hidden" name="id" value={s.id} />}
-      <Field label="Nome"><Input name="name" defaultValue={s?.name} required /></Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Nome"><Input name="name" defaultValue={s?.name} required /></Field>
+        <Field label="Categoria" hint="Agrupa no site, ex.: Depilação, Combos"><Input name="category" defaultValue={s?.category ?? ""} list="categorias" maxLength={60} /></Field>
+      </div>
       <Field label="Descrição (opcional)"><Textarea name="description" defaultValue={s?.description ?? ""} rows={2} /></Field>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Field label="Preço (R$)" hint="Vazio = sob consulta"><Input name="price" inputMode="decimal" defaultValue={s?.priceCents != null ? (s.priceCents / 100).toFixed(2).replace(".", ",") : ""} /></Field>
-        <Field label="Duração (min)"><Input name="durationMin" type="number" min={5} defaultValue={s?.durationMin ?? ""} required /></Field>
+        <Field label="Duração (min)"><Input name="durationMin" type="number" min={5} defaultValue={s?.durationMin ? s.durationMin : ""} required /></Field>
         <Field label="Preparo após (min)"><Input name="bufferMin" type="number" min={0} defaultValue={s?.bufferMin ?? 0} /></Field>
         <Field label="Ordem"><Input name="sortOrder" type="number" min={0} defaultValue={s?.sortOrder ?? 0} /></Field>
       </div>
@@ -29,6 +32,7 @@ export default async function Servicos() {
   return (
     <div className="space-y-6">
       <PageTitle title="Serviços" subtitle="Preço, duração e intervalo de preparo usados na agenda e no site." />
+      <datalist id="categorias">{[...new Set(services.map((s) => s.category).filter(Boolean))].map((c) => <option key={c} value={c!} />)}</datalist>
       <Card>
         <h2 className="mb-3 font-display text-lg">Novo serviço</h2>
         <AdminForm action={saveService} submit="Adicionar"><ServiceFields /></AdminForm>
@@ -36,8 +40,8 @@ export default async function Servicos() {
       {services.length === 0 ? <EmptyState>Nenhum serviço cadastrado.</EmptyState> : services.map((s) => (
         <details key={s.id} className="rounded-2xl border border-line bg-white">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-4">
-            <span className="font-medium">{s.name}</span>
-            <span className="flex items-center gap-2 text-sm text-muted">{formatBRL(s.priceCents)} · {s.durationMin} min {!s.active && <Badge>inativo</Badge>}</span>
+            <span className="font-medium">{s.category && <span className="mr-2 text-xs uppercase tracking-wide text-brand">{s.category}</span>}{s.name}</span>
+            <span className="flex items-center gap-2 text-sm text-muted">{formatBRL(s.priceCents)} · {s.durationMin >= 5 ? `${s.durationMin} min` : <Badge tone="warn">defina a duração</Badge>} {!s.active && <Badge>inativo</Badge>}</span>
           </summary>
           <div className="border-t border-line p-5"><AdminForm action={saveService}><ServiceFields s={s} /></AdminForm></div>
         </details>

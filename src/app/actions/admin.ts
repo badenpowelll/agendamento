@@ -35,6 +35,7 @@ const fail = (e: unknown): AdminState => {
 
 const serviceSchema = z.object({
   name: z.string().min(2, "Nome obrigatório").max(120),
+  category: z.string().max(60).optional(),
   description: z.string().max(1000).optional(),
   durationMin: z.coerce.number().int().min(5, "Duração mínima de 5 min").max(600),
   bufferMin: z.coerce.number().int().min(0).max(240),
@@ -47,6 +48,7 @@ export async function saveService(_p: AdminState, f: FormData): Promise<AdminSta
   try {
     const data = serviceSchema.parse({
       name: str(f, "name"),
+      category: str(f, "category") || undefined,
       description: str(f, "description") || undefined,
       durationMin: str(f, "durationMin"),
       bufferMin: str(f, "bufferMin") || 0,
@@ -57,7 +59,7 @@ export async function saveService(_p: AdminState, f: FormData): Promise<AdminSta
     const db = forTenant(ctx.tenant.id);
     const id = str(f, "id");
     const row = id
-      ? await db.service.update({ where: { id }, data: { ...data, description: data.description ?? null, priceCents } })
+      ? await db.service.update({ where: { id }, data: { ...data, category: data.category ?? null, description: data.description ?? null, priceCents } })
       : await db.service.create({ data: { ...data, priceCents } as never });
     // Primeiro serviço: habilita para todas as profissionais ativas
     if (!id) {
@@ -221,6 +223,14 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
         privacy: str(f, "privacy"),
         terms: str(f, "terms"),
         version: policiesChanged ? String(Number(current.policies.version || "1") + 1) : current.policies.version,
+      },
+      payment: {
+        pixKey: str(f, "pixKey"),
+        pixName: str(f, "pixName"),
+        depositPercent: str(f, "depositPercent") || 0,
+        depositHours: str(f, "depositHours") || 24,
+        methods: str(f, "paymentMethods"),
+        note: current.payment.note,
       },
       legal: { companyName: str(f, "companyName"), document: str(f, "document") },
     });

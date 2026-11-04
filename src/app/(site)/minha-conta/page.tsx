@@ -10,6 +10,9 @@ import { AppointmentActions } from "@/components/appointment-actions";
 import { ProfileForm } from "@/components/forms/profile-form";
 import { Badge, Button, ButtonLink, Card, EmptyState, Notice, PageTitle } from "@/components/ui";
 import { ExportDataButton } from "@/components/export-data-button";
+import { PixBox } from "@/components/pix-box";
+import { getSite } from "@/lib/site";
+import { depositCents, depositRequired } from "@/lib/deposit";
 
 export const metadata = { title: "Minha conta" };
 
@@ -27,6 +30,9 @@ export default async function MinhaConta({ searchParams }: { searchParams: Promi
   const upcoming = appts.filter((a) => UPCOMING_STATUSES.includes(a.status) && a.startAt > now).reverse();
   const history = appts.filter((a) => !upcoming.includes(a));
   const c = ctx.customer;
+  const site = await getSite();
+  const pay = depositRequired(site) ? site.payment : null;
+  const justBooked = ok ? appts.find((a) => a.id === ok) : undefined;
 
   return (
     <div className="py-10">
@@ -35,7 +41,15 @@ export default async function MinhaConta({ searchParams }: { searchParams: Promi
         subtitle="Seus horários e preferências."
         actions={<form action={signOutAction}><Button variant="ghost" type="submit">Sair</Button></form>}
       />
-      {ok && <div className="mb-6"><Notice tone="success">Agendamento confirmado! Você receberá a confirmação e os lembretes pelos canais escolhidos.</Notice></div>}
+      {ok && (
+        <div className="mb-6">
+          {justBooked?.status === "PENDING" && pay ? (
+            <Notice tone="success">Horário reservado! Pague o sinal pelo Pix abaixo para confirmar. Você receberá os detalhes e os lembretes pelos canais escolhidos.</Notice>
+          ) : (
+            <Notice tone="success">Agendamento confirmado! Você receberá a confirmação e os lembretes pelos canais escolhidos.</Notice>
+          )}
+        </div>
+      )}
 
       <section aria-labelledby="proximos" className="space-y-3">
         <div className="flex items-center justify-between">
@@ -53,8 +67,12 @@ export default async function MinhaConta({ searchParams }: { searchParams: Promi
                   <p className="text-sm text-muted">{formatDateTime(a.startAt, tz)} · {a.professional.name}</p>
                   <p className="text-sm text-muted">{formatBRL(a.priceCents)}</p>
                 </div>
-                <Badge tone={a.status === "RECONFIRMED" ? "good" : "brand"}>{STATUS_LABEL[a.status]}</Badge>
+                <Badge tone={a.status === "RECONFIRMED" ? "good" : a.status === "PENDING" ? "warn" : "brand"}>{STATUS_LABEL[a.status]}</Badge>
               </div>
+              {a.status === "PENDING" && pay && (
+                <PixBox pixKey={pay.pixKey} pixName={pay.pixName} percent={pay.depositPercent} hours={pay.depositHours} methods={pay.methods}
+                  amount={(() => { const d = depositCents(a.priceCents, pay.depositPercent); return d != null ? formatBRL(d) : null; })()} />
+              )}
               <AppointmentActions id={a.id} status={a.status} canReschedule />
             </Card>
           ))

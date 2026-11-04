@@ -35,7 +35,7 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
     }),
     db.timeOff.findMany({ where: { startAt: { lt: range.end }, endAt: { gt: range.start } }, include: { professional: true }, orderBy: { startAt: "asc" } }),
     db.professional.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
-    db.service.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    db.service.findMany({ where: { active: true, durationMin: { gte: 5 } }, orderBy: { name: "asc" } }),
     db.customer.findMany({ orderBy: { name: "asc" }, take: 500, select: { id: true, name: true, phone: true } }),
   ]);
 

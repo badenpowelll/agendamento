@@ -11,6 +11,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import { verifyActionToken } from "@/lib/tokens";
 import { createBooking, rescheduleAppointment, transitionAppointment } from "@/domain/booking";
 import { DomainError } from "@/domain/errors";
+import { getSite } from "@/lib/site";
+import { depositRequired } from "@/lib/deposit";
 
 /** Envia já as mensagens imediatas (confirmação), sem esperar o próximo ciclo do cron. */
 const flushSoon = () => after(() => processOutbox({ limit: 10 }).catch((e) => console.error("[outbox]", e)));
@@ -52,7 +54,7 @@ export async function bookAction(input: z.infer<typeof bookingSchema>): Promise<
     }
     const { appointment } = await createBooking(
       ctx.tenant.id,
-      { serviceId, professionalId, startAt: new Date(startAt), customerId: ctx.customer.id, idempotencyKey, source: "site" },
+      { serviceId, professionalId, startAt: new Date(startAt), customerId: ctx.customer.id, idempotencyKey, source: "site", initialStatus: depositRequired(await getSite()) ? "PENDING" : "CONFIRMED" },
       { type: "CUSTOMER", userId: ctx.user.id },
     );
     revalidatePath("/minha-conta");

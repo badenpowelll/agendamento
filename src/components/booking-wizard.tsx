@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { bookAction } from "@/app/actions/booking";
 import { Button, Card, Notice, cx } from "@/components/ui";
+import { PixBox } from "@/components/pix-box";
 
-type Service = { id: string; name: string; description: string | null; durationMin: number; price: string };
+type Service = { id: string; name: string; category: string | null; description: string | null; durationMin: number; price: string; deposit: string | null };
+type Deposit = { pixKey: string; pixName: string; percent: number; hours: number; methods: string };
 type Pro = { id: string; name: string; serviceIds: string[] };
 type Slot = { startAt: string; label: string; professionalIds: string[]; available?: boolean };
 
@@ -23,6 +25,7 @@ export function BookingWizard(props: {
   initial: { serviceId?: string; professionalId?: string; date?: string; startAt?: string };
   rescheduleId: string | null;
   session: { loggedIn: boolean; profileComplete: boolean };
+  deposit: Deposit | null;
 }) {
   const router = useRouter();
   const [serviceId, setServiceId] = useState(props.initial.serviceId && props.services.some((s) => s.id === props.initial.serviceId) ? props.initial.serviceId : "");
@@ -37,6 +40,14 @@ export function BookingWizard(props: {
   const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
 
   const service = props.services.find((s) => s.id === serviceId);
+  const groups = useMemo(() => {
+    const m = new Map<string, Service[]>();
+    for (const s of props.services) {
+      const k = s.category?.trim() || "";
+      m.set(k, [...(m.get(k) ?? []), s]);
+    }
+    return [...m.entries()];
+  }, [props.services]);
   const pros = useMemo(() => props.professionals.filter((p) => p.serviceIds.includes(serviceId)), [props.professionals, serviceId]);
 
   useEffect(() => {
@@ -89,8 +100,11 @@ export function BookingWizard(props: {
       {!props.rescheduleId && (
         <section>
           {step(1, "Serviço")}
-          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Serviço">
-            {props.services.map((s) => (
+          {groups.map(([cat, list]) => (
+          <div key={cat || "_"} className="mb-4">
+          {cat && groups.length > 1 && <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-brand">{cat}</h3>}
+          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={cat || "Serviço"}>
+            {list.map((s) => (
               <button key={s.id} role="radio" aria-checked={s.id === serviceId} onClick={() => { setServiceId(s.id); setProfessionalId(""); setStartAt(""); }}
                 className={cx("rounded-2xl border bg-white p-4 text-left transition", s.id === serviceId ? "border-brand ring-2 ring-brand/20" : "border-line hover:border-brand/40")}>
                 <span className="flex justify-between gap-2"><span className="font-medium">{s.name}</span><span className="text-sm text-brand">{s.price}</span></span>
@@ -98,6 +112,8 @@ export function BookingWizard(props: {
               </button>
             ))}
           </div>
+          </div>
+          ))}
         </section>
       )}
 
@@ -169,9 +185,12 @@ export function BookingWizard(props: {
             <span className="font-medium">{service.name}</span> · {dayLabel(date, props.timezone).dm} às {selectedSlot.label}
             {professionalId && <> · {pros.find((p) => p.id === professionalId)?.name}</>} · <span className="text-brand">{service.price}</span>
           </p>
+          {props.deposit && !props.rescheduleId && (
+            <PixBox pixKey={props.deposit.pixKey} pixName={props.deposit.pixName} percent={props.deposit.percent} hours={props.deposit.hours} amount={service.deposit} compact />
+          )}
           {error && <Notice tone="error">{error}</Notice>}
           <Button onClick={confirm} disabled={pending} className="w-full py-3 text-base">
-            {pending ? "Confirmando…" : props.rescheduleId ? "Confirmar novo horário" : props.session.loggedIn ? "Confirmar agendamento" : "Entrar com Google e confirmar"}
+            {pending ? "Confirmando…" : props.rescheduleId ? "Confirmar novo horário" : props.session.loggedIn ? (props.deposit ? "Reservar horário" : "Confirmar agendamento") : "Entrar com Google e confirmar"}
           </Button>
         </Card>
       )}

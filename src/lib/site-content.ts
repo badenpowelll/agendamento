@@ -40,6 +40,16 @@ export const siteContentSchema = z.object({
     terms: z.string().max(20000).default(""),
     version: z.string().max(20).default("1"),
   }),
+  payment: z
+    .object({
+      pixKey: z.string().max(120).default(""),
+      pixName: z.string().max(120).default(""), // nome que aparece no app do banco ao pagar
+      depositPercent: z.coerce.number().int().min(0).max(100).default(0), // 0 = sem sinal
+      depositHours: z.coerce.number().int().min(1).max(168).default(24), // prazo para pagar o sinal
+      methods: z.string().max(300).default(""), // ex.: Pix, débito e crédito (crédito com taxa da maquininha)
+      note: z.string().max(1000).default(""),
+    })
+    .prefault({}),
   legal: z.object({
     companyName: z.string().max(200).default(""),
     document: z.string().max(30).default(""), // CNPJ
@@ -53,6 +63,7 @@ export const EMPTY_SITE_CONTENT: SiteContent = siteContentSchema.parse({
   about: {},
   contact: {},
   policies: {},
+  payment: {},
   legal: {},
 });
 

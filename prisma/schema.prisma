@@ -236,6 +236,7 @@ model Service {
   id          String   @id @default(cuid())
   tenantId    String
   name        String
+  category    String?  // grupo exibido no site (ex.: Depilação, Combos)
   description String?
   priceCents  Int?     // null = "sob consulta"
   durationMin Int

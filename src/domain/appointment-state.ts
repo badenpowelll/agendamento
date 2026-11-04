@@ -1,7 +1,7 @@
 import type { AppointmentStatus, ActorType } from "@prisma/client";
 
 export const STATUS_LABEL: Record<AppointmentStatus, string> = {
-  PENDING: "Pendente",
+  PENDING: "Aguardando sinal",
   CONFIRMED: "Confirmado",
   RECONFIRMED: "Presença reconfirmada",
   CHECKED_IN: "Cliente chegou",

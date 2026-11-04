@@ -6,7 +6,7 @@ import { staffTransition } from "@/app/actions/admin";
 import { allowedTransitions, STATUS_LABEL } from "@/domain/appointment-state";
 
 const ACTION_LABEL: Partial<Record<AppointmentStatus, string>> = {
-  CONFIRMED: "Confirmar",
+  CONFIRMED: "Confirmar (sinal recebido)",
   RECONFIRMED: "Marcar presença reconfirmada",
   CHECKED_IN: "Cliente chegou",
   IN_SERVICE: "Iniciar atendimento",

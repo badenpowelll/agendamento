@@ -7,6 +7,9 @@ import { ACTIVE_STATUSES, canTransition, UPCOMING_STATUSES } from "./appointment
 import { DomainError, SlotUnavailableError } from "./errors";
 import { planBookingMessages, planCancellationMessages, type PlannedMessage } from "./messages";
 
+/** Serviço sem duração definida (0) aparece na tabela de preços, mas não pode ser agendado online. */
+export const MIN_BOOKABLE_MIN = 5;
+
 export interface Actor {
   type: ActorType;
   userId?: string | null;
@@ -49,7 +52,7 @@ export async function getSlotBoard(
   const today = toLocalDate(now, tenant.timezone);
   if (q.date < today || q.date > addDays(today, tenant.maxDaysAhead)) return { available: [], taken: [] };
 
-  const service = await db.service.findFirst({ where: { id: q.serviceId, active: true } });
+  const service = await db.service.findFirst({ where: { id: q.serviceId, active: true, durationMin: { gte: MIN_BOOKABLE_MIN } } });
   if (!service) throw new DomainError("SERVICE_NOT_FOUND", "Serviço não encontrado.");
 
   const links = await db.professionalService.findMany({
@@ -116,6 +119,8 @@ export interface BookingInput {
   notes?: string | null;
   /** Encaixe autorizado pela equipe: ignora horário de trabalho e antecedência, mas nunca o conflito. */
   allowOutsideHours?: boolean;
+  /** PENDING quando o estabelecimento exige sinal: a equipe confirma ao receber o pagamento. */
+  initialStatus?: "PENDING" | "CONFIRMED";
   now?: Date;
 }
 
@@ -155,7 +160,7 @@ export async function createBooking(tenantId: string, input: BookingInput, actor
 
   const customer = await db.customer.findFirst({ where: { id: input.customerId } });
   if (!customer) throw new DomainError("CUSTOMER_NOT_FOUND", "Cadastro da cliente não encontrado.");
-  const service = await db.service.findFirst({ where: { id: input.serviceId, active: true } });
+  const service = await db.service.findFirst({ where: { id: input.serviceId, active: true, durationMin: { gte: MIN_BOOKABLE_MIN } } });
   if (!service) throw new DomainError("SERVICE_NOT_FOUND", "Serviço não encontrado.");
   const { tenant, professionalId } = await chooseProfessional(tenantId, input, db);
   const now = input.now ?? new Date();
@@ -172,7 +177,7 @@ export async function createBooking(tenantId: string, input: BookingInput, actor
           startAt: input.startAt,
           endAt: addMinutes(input.startAt, service.durationMin),
           blockEndAt: addMinutes(input.startAt, service.durationMin + service.bufferMin),
-          status: "CONFIRMED",
+          status: input.initialStatus ?? "CONFIRMED",
           idempotencyKey: input.idempotencyKey,
           source: input.source ?? "site",
           notes: input.notes ?? null,
@@ -267,6 +272,8 @@ export async function rescheduleAppointment(
   }
   const service = await db.service.findFirst({ where: { id: old.serviceId } });
   if (!service) throw new DomainError("SERVICE_NOT_FOUND", "Serviço não encontrado.");
+  // Reserva que ainda aguardava o sinal continua aguardando depois de reagendada.
+  const newStatus = old.status === "PENDING" ? "PENDING" : "CONFIRMED";
   const { professionalId } = await chooseProfessional(
     tenantId,
     { serviceId: old.serviceId, professionalId: input.professionalId ?? null, startAt: input.startAt, customerId: old.customerId, idempotencyKey: input.idempotencyKey, now, allowOutsideHours: input.allowOutsideHours },
@@ -290,14 +297,14 @@ export async function rescheduleAppointment(
           startAt: input.startAt,
           endAt: addMinutes(input.startAt, service.durationMin),
           blockEndAt: addMinutes(input.startAt, service.durationMin + service.bufferMin),
-          status: "CONFIRMED",
+          status: newStatus,
           idempotencyKey: input.idempotencyKey,
           source: old.source,
           notes: old.notes,
           rescheduledFromId: old.id,
         } as never,
       });
-      await tx.appointmentEvent.create({ data: { appointmentId: appt.id, toStatus: "CONFIRMED", actorType: actor.type, actorUserId: actor.userId ?? null, note: "Reagendamento" } as never });
+      await tx.appointmentEvent.create({ data: { appointmentId: appt.id, toStatus: newStatus, actorType: actor.type, actorUserId: actor.userId ?? null, note: "Reagendamento" } as never });
       await enqueue(tx, planBookingMessages(appt, old.customer, tenant, now));
       return appt;
     });
