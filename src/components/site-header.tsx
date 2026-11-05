@@ -11,12 +11,11 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-20 border-b border-line/70 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <Link href="/" className="flex items-center gap-2" aria-label="Página inicial">
-          {site.brand.logoUrl ? (
+          {site.brand.logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={site.brand.logoUrl} alt={site.brand.displayName} className="h-9 w-auto" />
-          ) : (
-            <span className="font-display text-xl text-ink">{site.brand.displayName}</span>
+            <img src="/marca/logo-mr.png" alt="" className="h-10 w-10" />
           )}
+          <span className="font-display text-xl text-ink">{site.brand.displayName}</span>
         </Link>
         <nav className="flex items-center gap-1 text-sm" aria-label="Principal">
           <Link href="/#servicos" className="hidden rounded-full px-3 py-2 text-muted hover:text-ink sm:inline">Serviços</Link>

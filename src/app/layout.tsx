@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {site.brand.watermarkUrl && (
           <div
             aria-hidden
-            className="pointer-events-none fixed inset-0 -z-10 bg-center bg-no-repeat opacity-[0.12] [background-size:min(78vmin,720px)] grayscale-[30%]"
+            className="pointer-events-none fixed inset-0 -z-10 bg-center bg-no-repeat opacity-[0.07] [background-size:min(78vmin,720px)] grayscale-[30%]"
             style={{ backgroundImage: `url("${site.brand.watermarkUrl.replace(/["\\()]/g, "")}")` }}
           />
         )}

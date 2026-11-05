@@ -17,7 +17,12 @@ export async function SiteFooter() {
     <footer className="mt-16 border-t border-line bg-white">
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-10 text-sm text-muted sm:grid-cols-3">
         <div>
-          <p className="font-display text-lg text-ink">{site.brand.displayName}</p>
+          {site.brand.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={site.brand.logoUrl} alt={site.brand.displayName} className="-ml-2 mb-1 w-44" />
+          ) : (
+            <p className="font-display text-lg text-ink">{site.brand.displayName}</p>
+          )}
           {site.legal.companyName && <p className="mt-1">{site.legal.companyName}{site.legal.document ? ` · CNPJ ${site.legal.document}` : ""}</p>}
           {site.contact.address && <p className="mt-1">{site.contact.address}</p>}
         </div>

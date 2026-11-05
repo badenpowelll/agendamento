@@ -7,6 +7,7 @@ import { EMPTY_SITE_CONTENT } from "../src/lib/site-content";
 import { hashPassword, passwordProblem } from "../src/lib/password";
 import { applyGuide } from "./apply-guide";
 import { applyStaffReset } from "./apply-staff-reset";
+import { applyBrand } from "./apply-brand";
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,7 @@ async function main() {
   const tenant = await prisma.tenant.upsert({
     where: { slug },
     update: {},
-    create: { slug, name: "Milly Rodrigues — Depilação e Estética", timezone: "America/Fortaleza" },
+    create: { slug, name: "Milly Rodrigues — Epilação e Estética", timezone: "America/Fortaleza" },
   });
   await prisma.siteContent.upsert({ where: { tenantId: tenant.id }, update: {}, create: { tenantId: tenant.id, data: EMPTY_SITE_CONTENT } });
 
@@ -32,6 +33,7 @@ async function main() {
   }
   if (process.env.SKIP_GUIDE !== "1" && slug === "milly-rodrigues" && (await applyGuide(prisma, tenant.id))) console.info("Guia de Atendimento aplicado (textos, Pix do sinal e serviços).");
   if (slug === "milly-rodrigues" && (await applyStaffReset(prisma, tenant.id))) console.info("Acesso de teste liberado (teste@teste.com).");
+  if (slug === "milly-rodrigues" && (await applyBrand(prisma, tenant.id))) console.info("Logomarca oficial aplicada.");
   console.info(`Estabelecimento pronto: ${tenant.name} (${tenant.id})`);
 }
 

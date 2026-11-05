@@ -48,7 +48,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-dvh lg:flex">
       <aside className="border-b border-line bg-white lg:sticky lg:top-0 lg:h-dvh lg:w-64 lg:overflow-y-auto lg:shrink-0 lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between bg-gradient-to-br from-brand to-brand-dark px-4 py-3 text-white lg:block lg:py-5">
-          <Link href="/admin" className="font-display text-lg">Painel {ctx.tenant.name}</Link>
+          <Link href="/admin" className="flex items-center gap-3 font-display text-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/marca/logo-mr.png" alt="" className="h-11 w-11 shrink-0 rounded-full bg-white p-1 shadow-sm" />
+            <span className="leading-tight">Painel {ctx.tenant.name}</span>
+          </Link>
           <p className="hidden text-xs text-white/80 lg:mt-1 lg:block">{ctx.staff.name} · {ROLE_LABEL[ctx.role]}</p>
         </div>
         <nav aria-label="Painel" className="flex gap-1 overflow-x-auto px-2 pb-2 text-sm lg:flex-col lg:px-3">

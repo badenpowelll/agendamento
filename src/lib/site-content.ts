@@ -8,8 +8,8 @@ export const siteContentSchema = z.object({
   brand: z.object({
     displayName: z.string().max(80).default("Milly Rodrigues"),
     tagline: z.string().max(160).default(""),
-    logoUrl: z.string().max(500).default(""),
-    watermarkUrl: z.string().max(500).default("/marca/selo-milly.png"), // foto clarinha ao fundo de todas as páginas
+    logoUrl: z.string().max(500).default("/marca/logo-milly.png"), // logomarca oficial (enviada pelo Baden em 05/11/2026)
+    watermarkUrl: z.string().max(500).default("/marca/marca-dagua.png"), // foto clarinha ao fundo de todas as páginas
     primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#e0457b"),
   }),
   about: z.object({

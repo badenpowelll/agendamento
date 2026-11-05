@@ -21,7 +21,7 @@ export default async function Home() {
       <section className="relative mx-[calc(50%-50vw)] overflow-hidden bg-gradient-to-br from-blush/80 via-cream/70 to-rose/50 px-4 py-14 sm:py-20">
         <div className="mx-auto grid max-w-5xl items-center gap-10 md:grid-cols-[1.1fr_0.9fr]">
           <div className="text-center md:text-left">
-            <p className="inline-block rounded-full bg-white/80 px-4 py-1 text-xs font-medium uppercase tracking-[0.2em] text-brand">Depilação e Estética</p>
+            <p className="inline-block rounded-full bg-white/80 px-4 py-1 text-xs font-medium uppercase tracking-[0.2em] text-brand">Epilação e Estética</p>
             <h1 className="mt-5 font-display text-4xl leading-tight text-ink sm:text-6xl">{site.brand.displayName}</h1>
             {site.brand.tagline && <p className="mt-4 max-w-xl text-lg text-muted md:mx-0 mx-auto">{site.brand.tagline}</p>}
             <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
@@ -38,18 +38,21 @@ export default async function Home() {
               </a>
             )}
           </div>
-          <div className={photos[0] || site.brand.watermarkUrl ? "relative mx-auto w-full max-w-[16rem] md:max-w-sm" : "relative mx-auto hidden w-full max-w-sm md:block"}>
+          <div className={photos[0] || site.brand.logoUrl || site.brand.watermarkUrl ? "relative mx-auto w-full max-w-[16rem] md:max-w-sm" : "relative mx-auto hidden w-full max-w-sm md:block"}>
             <div className={photos[0] ? "absolute -inset-3 rotate-3 rounded-[2rem] bg-brand/20" : "absolute -inset-3 rounded-full bg-brand/15"} aria-hidden />
             {photos[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photos[0].url} alt={photos[0].alt} className="relative aspect-[4/5] w-full rounded-[2rem] object-cover shadow-xl" />
+            ) : site.brand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={site.brand.logoUrl} alt={`Logomarca ${site.brand.displayName} — Epilação e Estética`} className="relative aspect-square w-full rounded-full bg-white object-contain p-8 shadow-xl" />
             ) : site.brand.watermarkUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={site.brand.watermarkUrl} alt={`Selo ${site.brand.displayName}`} className="relative aspect-square w-full rounded-full bg-white/90 object-contain p-3 shadow-xl" />
             ) : (
               <div className="relative flex aspect-[4/5] w-full flex-col items-center justify-center rounded-[2rem] bg-gradient-to-b from-brand to-brand-dark p-8 text-center text-white shadow-xl">
                 <p className="font-display text-3xl">{site.brand.displayName}</p>
-                <p className="mt-2 text-sm uppercase tracking-[0.2em] text-white/80">Depilação e Estética</p>
+                <p className="mt-2 text-sm uppercase tracking-[0.2em] text-white/80">Epilação e Estética</p>
               </div>
             )}
           </div>
