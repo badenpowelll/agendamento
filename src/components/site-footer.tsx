@@ -35,7 +35,7 @@ export async function SiteFooter() {
         <ul className="space-y-1.5">
           <li><Link className="hover:text-ink" href="/privacidade">Política de privacidade</Link></li>
           <li><Link className="hover:text-ink" href="/termos">Termos e condições</Link></li>
-          <li className="pt-2 text-xs">© {year} {site.brand.displayName}</li>
+          <li className="pt-2 text-xs">{year} Argos Tecnologia e Soluções</li>
         </ul>
       </div>
       {site.contact.whatsapp && (
