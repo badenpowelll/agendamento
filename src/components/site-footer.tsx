@@ -24,6 +24,7 @@ export async function SiteFooter() {
         <ul className="space-y-1.5">
           {site.contact.instagram && <li><a className="hover:text-ink" href={site.contact.instagram} target="_blank" rel="noopener noreferrer">Instagram{site.contact.instagram.match(/instagram\.com\/([\w.]+)/) ? ` @${site.contact.instagram.match(/instagram\.com\/([\w.]+)/)![1]}` : ""}</a></li>}
           {site.contact.whatsapp && <li><a data-wa className="hover:text-ink" href={whatsappLink(site.contact.whatsapp, site.contact.whatsappMessage || undefined)} target="_blank" rel="noopener noreferrer">WhatsApp</a></li>}
+          {site.contact.reviewUrl && <li><a className="hover:text-ink" href={site.contact.reviewUrl} target="_blank" rel="noopener noreferrer">★ Avaliar no Google</a></li>}
           {site.contact.email && <li><a className="hover:text-ink" href={`mailto:${site.contact.email}`}>{site.contact.email}</a></li>}
         </ul>
         <ul className="space-y-1.5">

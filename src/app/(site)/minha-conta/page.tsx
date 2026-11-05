@@ -81,6 +81,12 @@ export default async function MinhaConta({ searchParams }: { searchParams: Promi
 
       <section aria-labelledby="historico" className="mt-10 space-y-3">
         <h2 id="historico" className="font-display text-xl">Histórico</h2>
+        {site.contact.reviewUrl && history.some((a) => a.status === "COMPLETED") && (
+          <Card className="flex flex-col items-start gap-3 border-[#f4b400]/40 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm">Gostou do atendimento? Sua avaliação no Google ajuda outras clientes a encontrar a gente.</p>
+            <a href={site.contact.reviewUrl} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap rounded-full bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark">★ Avaliar no Google</a>
+          </Card>
+        )}
         {history.length === 0 ? (
           <EmptyState>Nenhum atendimento anterior.</EmptyState>
         ) : (

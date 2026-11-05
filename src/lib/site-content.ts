@@ -23,6 +23,7 @@ export const siteContentSchema = z.object({
     email: z.string().max(200).default(""),
     address: z.string().max(300).default(""),
     mapsUrl: z.string().max(500).default(""),
+    reviewUrl: z.string().max(500).default("https://maps.app.goo.gl/j1bhVY3aXQt1VmbUA"), // perfil no Google para avaliações (enviado pelo Baden em 05/11/2026)
     hoursText: z.string().max(500).default(""),
   }),
   gallery: z

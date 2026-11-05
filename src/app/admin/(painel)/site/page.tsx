@@ -35,6 +35,7 @@ export default async function SiteEditor() {
             <Field label="E-mail"><Input name="email" type="email" defaultValue={s.contact.email} /></Field>
             <Field label="Instagram (link)"><Input name="instagram" defaultValue={s.contact.instagram} /></Field>
             <Field label="Link do Google Maps"><Input name="mapsUrl" defaultValue={s.contact.mapsUrl} /></Field>
+            <Field label="Link para avaliar no Google" hint="Perfil da clínica no Google. Vazio = sem botão de avaliação."><Input name="reviewUrl" defaultValue={s.contact.reviewUrl} /></Field>
           </div>
           <Field label="Endereço completo"><Input name="address" defaultValue={s.contact.address} /></Field>
           <Field label="Horário de funcionamento (texto exibido no site)"><Textarea name="hoursText" defaultValue={s.contact.hoursText} rows={3} /></Field>

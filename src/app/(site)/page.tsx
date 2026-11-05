@@ -177,6 +177,11 @@ export default async function Home() {
               {site.contact.instagram && <ButtonLink href={site.contact.instagram} variant="secondary" target="_blank" rel="noopener noreferrer">Instagram</ButtonLink>}
               {site.contact.whatsapp && <ButtonLink data-wa href={wa} variant="secondary" target="_blank" rel="noopener noreferrer">WhatsApp</ButtonLink>}
             </div>
+            {site.contact.reviewUrl && (
+              <a href={site.contact.reviewUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#f4b400]/60 bg-white px-5 py-2.5 text-sm font-medium text-ink shadow-sm hover:border-[#f4b400]">
+                <span className="text-base leading-none text-[#f4b400]" aria-hidden>★★★★★</span> Avalie a gente no Google
+              </a>
+            )}
           </div>
           <div className="flex flex-col justify-center rounded-2xl bg-blush p-6 text-center">
             <p className="font-display text-2xl">Pronta para agendar?</p>
