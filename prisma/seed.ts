@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 import { EMPTY_SITE_CONTENT } from "../src/lib/site-content";
 import { hashPassword, passwordProblem } from "../src/lib/password";
 import { applyGuide } from "./apply-guide";
+import { applyStaffReset } from "./apply-staff-reset";
 
 const prisma = new PrismaClient();
 
@@ -30,6 +31,7 @@ async function main() {
     console.info(`Acesso da gestora criado: ${ownerEmail} (troca de senha obrigatória no primeiro acesso)`);
   }
   if (process.env.SKIP_GUIDE !== "1" && slug === "milly-rodrigues" && (await applyGuide(prisma, tenant.id))) console.info("Guia de Atendimento aplicado (textos, Pix do sinal e serviços).");
+  if (slug === "milly-rodrigues" && (await applyStaffReset(prisma, tenant.id))) console.info("Acesso de teste liberado (teste@teste.com).");
   console.info(`Estabelecimento pronto: ${tenant.name} (${tenant.id})`);
 }
 
