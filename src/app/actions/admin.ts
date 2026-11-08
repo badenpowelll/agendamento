@@ -153,6 +153,46 @@ export async function deleteTimeOff(id: string) {
   revalidatePath("/admin/agenda");
 }
 
+// ---------- Feriados nacionais ----------
+
+async function updateHolidayRule(tenantId: string, change: (h: { closeNational: boolean; openDates: string[] }) => { closeNational: boolean; openDates: string[] }) {
+  const db = forTenant(tenantId);
+  const current = parseSiteContent((await db.siteContent.findFirst())?.data);
+  const data = siteContentSchema.parse({ ...current, holidays: change(current.holidays) });
+  await db.siteContent.upsert({ where: { tenantId }, create: { data } as never, update: { data } });
+  return data.holidays;
+}
+
+/** Liga/desliga o fechamento automático da agenda online nos feriados nacionais. */
+export async function setHolidayClosing(_p: AdminState, f: FormData): Promise<AdminState> {
+  const ctx = await requireStaff("ADMIN");
+  try {
+    const closeNational = f.get("closeNational") === "on";
+    await updateHolidayRule(ctx.tenant.id, (h) => ({ ...h, closeNational }));
+    await audit(ctx.tenant.id, ctx.user.id, "holidays.rule", "SiteContent", null, { closeNational });
+    revalidatePath("/admin/agenda");
+    revalidatePath("/agendar");
+    return { ok: closeNational ? "A agenda online fecha nos feriados nacionais." : "Feriados nacionais com atendimento normal." };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Abre (ou volta a fechar) um feriado específico. */
+export async function setHolidayOpen(date: string, open: boolean) {
+  const ctx = await requireStaff("ADMIN");
+  if (!isIsoDate(date)) throw new DomainError("DATE", "Data inválida.");
+  const today = new Date().toISOString().slice(0, 10);
+  await updateHolidayRule(ctx.tenant.id, (h) => ({
+    ...h,
+    // descarta exceções antigas para a lista não crescer sem limite
+    openDates: [...new Set([...h.openDates.filter((d) => d !== date && d >= today), ...(open ? [date] : [])])].sort(),
+  }));
+  await audit(ctx.tenant.id, ctx.user.id, open ? "holidays.open" : "holidays.close", "SiteContent", null, { date });
+  revalidatePath("/admin/agenda");
+  revalidatePath("/agendar");
+}
+
 // ---------- Agendamentos pela equipe ----------
 
 export async function staffTransition(appointmentId: string, to: AppointmentStatus, note?: string): Promise<AdminState> {
@@ -234,6 +274,7 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
         note: current.payment.note,
       },
       legal: { companyName: str(f, "companyName"), document: str(f, "document") },
+      holidays: current.holidays, // editado na Agenda
     });
     for (const u of [data.brand.logoUrl, data.brand.watermarkUrl, data.contact.instagram, data.contact.mapsUrl, data.contact.reviewUrl, ...data.gallery.map((g) => g.url)]) {
       if (u && !/^https:\/\//.test(u) && !/^\/(galeria|marca)\/[\w.-]+$/.test(u)) throw new DomainError("URL", `Endereço precisa começar com https:// (${u.slice(0, 40)})`);

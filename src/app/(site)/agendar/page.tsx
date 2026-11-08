@@ -7,6 +7,7 @@ import { addDays, toLocalDate, formatDateTime } from "@/lib/time";
 import { UPCOMING_STATUSES } from "@/domain/appointment-state";
 import { BookingWizard } from "@/components/booking-wizard";
 import { MIN_BOOKABLE_MIN } from "@/domain/booking";
+import { holidaysInRange } from "@/domain/holidays";
 import { EmptyState, Notice, PageTitle } from "@/components/ui";
 
 export const metadata = { title: "Agendar" };
@@ -30,6 +31,7 @@ export default async function Agendar({ searchParams }: { searchParams: Promise<
 
   const today = toLocalDate(new Date(), ctx.tenant.timezone);
   const days = Array.from({ length: Math.min(ctx.tenant.maxDaysAhead + 1, 45) }, (_, i) => addDays(today, i));
+  const holidays = Object.fromEntries([...(await holidaysInRange(ctx.tenant.id, days[0], days[days.length - 1], db))].map(([d, h]) => [d, { name: h.name, closed: h.closed }]));
 
   return (
     <div className="mx-auto max-w-2xl py-10">
@@ -42,6 +44,7 @@ export default async function Agendar({ searchParams }: { searchParams: Promise<
           services={services.map((s) => { const d = pay ? depositCents(s.priceCents, pay.depositPercent) : null; return { id: s.id, name: s.name, category: s.category, description: s.description, durationMin: s.durationMin, price: formatBRL(s.priceCents), deposit: d != null ? formatBRL(d) : null }; })}
           professionals={pros.map((p) => ({ id: p.id, name: p.name, serviceIds: p.services.map((x) => x.serviceId) }))}
           days={days}
+          holidays={holidays}
           timezone={ctx.tenant.timezone}
           initial={{ serviceId: reschedule?.serviceId ?? sp.servico, professionalId: sp.profissional, date: sp.data, startAt: sp.hora }}
           rescheduleId={reschedule?.id ?? null}

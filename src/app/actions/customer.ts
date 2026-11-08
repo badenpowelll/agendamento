@@ -9,6 +9,7 @@ import { forTenant } from "@/lib/tenant-db";
 import { getSite } from "@/lib/site";
 import { audit } from "@/domain/audit";
 import { normalizePhoneBR } from "@/lib/phone";
+import { normalizeCep } from "@/lib/cep";
 
 const safeCallback = (v: unknown) => (typeof v === "string" && v.startsWith("/") && !v.startsWith("//") ? v : "/minha-conta");
 
@@ -29,6 +30,22 @@ const profileSchema = z.object({
   acceptTerms: z.literal(true, { message: "É preciso aceitar os termos e a política de privacidade." }),
 });
 
+const opt = (max: number) => z.string().trim().max(max).transform((v) => v || null);
+const addressSchema = z.object({
+  addressCep: z.string().trim().transform((v, c) => {
+    if (!v) return null;
+    const cep = normalizeCep(v);
+    if (!cep) c.addIssue({ code: "custom", message: "CEP precisa ter 8 números." });
+    return cep;
+  }),
+  addressStreet: opt(120),
+  addressNumber: opt(20),
+  addressComplement: opt(80),
+  addressDistrict: opt(80),
+  addressCity: opt(80),
+  addressState: z.string().trim().toUpperCase().refine((v) => !v || /^[A-Z]{2}$/.test(v), "UF inválida (ex.: RN).").transform((v) => v || null),
+});
+
 export type FormState = { error?: string; ok?: boolean };
 
 export async function saveProfile(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -42,6 +59,8 @@ export async function saveProfile(_prev: FormState, formData: FormData): Promise
     acceptTerms: formData.get("acceptTerms") === "on" || (!!ctx.customer?.profileComplete && formData.get("acceptTerms") !== "off"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const addr = addressSchema.safeParse(Object.fromEntries(Object.keys(addressSchema.shape).map((k) => [k, String(formData.get(k) ?? "")])));
+  if (!addr.success) return { error: addr.error.issues[0].message };
   const phone = normalizePhoneBR(parsed.data.phone);
   if (!phone) return { error: "WhatsApp inválido. Use DDD + número, por exemplo (84) 99999-9999." };
 
@@ -56,6 +75,7 @@ export async function saveProfile(_prev: FormState, formData: FormData): Promise
     allowEmail: parsed.data.allowEmail,
     allowWhatsapp: parsed.data.allowWhatsapp,
     allowMarketing: parsed.data.allowMarketing,
+    ...addr.data,
     profileComplete: true,
     ...(phoneChanged ? { phoneVerifiedAt: null } : {}),
   };

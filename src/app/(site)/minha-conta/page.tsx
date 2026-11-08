@@ -108,7 +108,7 @@ export default async function MinhaConta({ searchParams }: { searchParams: Promi
         <h2 id="dados" className="mb-3 font-display text-xl">Meus dados e preferências</h2>
         <Card>
           <ProfileForm
-            initial={{ name: c.name, phone: formatPhoneBR(c.phone), email: c.email ?? "", allowEmail: c.allowEmail, allowWhatsapp: c.allowWhatsapp, allowMarketing: c.allowMarketing, complete: true }}
+            initial={{ name: c.name, phone: formatPhoneBR(c.phone), email: c.email ?? "", allowEmail: c.allowEmail, allowWhatsapp: c.allowWhatsapp, allowMarketing: c.allowMarketing, complete: true, address: { cep: c.addressCep ?? "", street: c.addressStreet ?? "", number: c.addressNumber ?? "", complement: c.addressComplement ?? "", district: c.addressDistrict ?? "", city: c.addressCity ?? "", state: c.addressState ?? "" } }}
           />
           <div className="mt-6 border-t border-line pt-4 text-sm text-muted">
             <p>Você pode baixar uma cópia dos seus dados ou pedir a exclusão do cadastro pelo WhatsApp do estabelecimento.</p>

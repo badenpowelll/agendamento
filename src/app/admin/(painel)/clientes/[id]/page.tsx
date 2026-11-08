@@ -4,6 +4,7 @@ import { forTenant } from "@/lib/tenant-db";
 import { formatDateTime } from "@/lib/time";
 import { formatBRL } from "@/lib/money";
 import { formatPhoneBR } from "@/lib/phone";
+import { formatCep } from "@/lib/cep";
 import { STATUS_LABEL } from "@/domain/appointment-state";
 import { Badge, Card, PageTitle } from "@/components/ui";
 import { VerifyPhoneButton } from "@/components/verify-phone-button";
@@ -26,6 +27,12 @@ export default async function Cliente({ params }: { params: Promise<{ id: string
         <Card><p className="text-sm text-muted">Última visita</p><p className="text-lg font-semibold">{completed[0] ? formatDateTime(completed[0].startAt, tz, { dateStyle: "short", timeStyle: undefined }) : "—"}</p></Card>
         <Card><p className="text-sm text-muted">Faltas</p><p className="text-2xl font-semibold">{c.appointments.filter((a) => a.status === "NO_SHOW").length}</p></Card>
       </div>
+      {(c.addressCep || c.addressStreet || c.addressCity) && (
+        <Card className="space-y-1 text-sm">
+          <h2 className="font-display text-lg">Endereço</h2>
+          <p>{[[c.addressStreet, c.addressNumber].filter(Boolean).join(", "), c.addressComplement, c.addressDistrict, [c.addressCity, c.addressState].filter(Boolean).join(" - "), c.addressCep && `CEP ${formatCep(c.addressCep)}`].filter(Boolean).join(" · ")}</p>
+        </Card>
+      )}
       <Card className="space-y-2 text-sm">
         <h2 className="font-display text-lg">WhatsApp</h2>
         <p>{c.phoneVerifiedAt ? <Badge tone="good">Número verificado</Badge> : <Badge tone="warn">Número não verificado</Badge>} {c.allowWhatsapp ? "Aceita avisos por WhatsApp." : "Não aceita avisos por WhatsApp."}</p>

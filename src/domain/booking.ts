@@ -5,6 +5,7 @@ import { addDays, addMinutes, dayRange, isIsoDate, toLocalDate, weekdayOf } from
 import { computeSlotGrid, type Interval } from "./availability";
 import { ACTIVE_STATUSES, canTransition, UPCOMING_STATUSES } from "./appointment-state";
 import { DomainError, SlotUnavailableError } from "./errors";
+import { closedHolidayOn } from "./holidays";
 import { planBookingMessages, planCancellationMessages, planDepositConfirmedMessages, type PlannedMessage } from "./messages";
 
 /** Serviço sem duração definida (0) aparece na tabela de preços, mas não pode ser agendado online. */
@@ -45,7 +46,7 @@ export async function getSlotBoard(
   tenantId: string,
   q: AvailabilityQuery,
   db: TenantDb | TenantTx = forTenant(tenantId),
-): Promise<{ available: AvailableSlot[]; taken: Date[] }> {
+): Promise<{ available: AvailableSlot[]; taken: Date[]; holiday?: string }> {
   if (!isIsoDate(q.date)) throw new DomainError("INVALID_DATE", "Data inválida.");
   const tenant = await loadTenant(tenantId);
   const now = q.now ?? new Date();
@@ -54,6 +55,10 @@ export async function getSlotBoard(
 
   const service = await db.service.findFirst({ where: { id: q.serviceId, active: true, durationMin: { gte: MIN_BOOKABLE_MIN } } });
   if (!service) throw new DomainError("SERVICE_NOT_FOUND", "Serviço não encontrado.");
+
+  // Feriado nacional com a agenda fechada: nenhum horário online (o encaixe pela equipe continua possível)
+  const holiday = await closedHolidayOn(tenantId, q.date, db);
+  if (holiday) return { available: [], taken: [], holiday };
 
   const links = await db.professionalService.findMany({
     where: { serviceId: service.id, ...(q.professionalId ? { professionalId: q.professionalId } : {}), professional: { active: true } },

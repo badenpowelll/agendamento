@@ -21,6 +21,8 @@ export function BookingWizard(props: {
   services: Service[];
   professionals: Pro[];
   days: string[];
+  /** Feriados nacionais no período; closed = agenda online fechada no dia. */
+  holidays: Record<string, { name: string; closed: boolean }>;
   timezone: string;
   initial: { serviceId?: string; professionalId?: string; date?: string; startAt?: string };
   rescheduleId: string | null;
@@ -30,7 +32,9 @@ export function BookingWizard(props: {
   const router = useRouter();
   const [serviceId, setServiceId] = useState(props.initial.serviceId && props.services.some((s) => s.id === props.initial.serviceId) ? props.initial.serviceId : "");
   const [professionalId, setProfessionalId] = useState(props.initial.professionalId ?? "");
-  const [date, setDate] = useState(props.initial.date && props.days.includes(props.initial.date) ? props.initial.date : props.days[0]);
+  const openDays = props.days.filter((d) => !props.holidays[d]?.closed);
+  const [date, setDate] = useState(props.initial.date && openDays.includes(props.initial.date) ? props.initial.date : (openDays[0] ?? props.days[0]));
+  const [holiday, setHoliday] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [startAt, setStartAt] = useState(props.initial.startAt ?? "");
@@ -61,6 +65,7 @@ export function BookingWizard(props: {
         const j = await r.json();
         if (!r.ok) throw new Error(j.error ?? "Erro");
         setSlots(j.slots);
+        setHoliday(j.holiday ?? null);
         setStartAt((cur) => (j.slots.some((s: Slot) => s.startAt === cur && s.available !== false) ? cur : ""));
       })
       .catch((e) => e.name !== "AbortError" && setLoadError("Não foi possível carregar os horários. Tente novamente."));
@@ -137,14 +142,24 @@ export function BookingWizard(props: {
           <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2" role="radiogroup" aria-label="Dia">
             {props.days.map((d) => {
               const l = dayLabel(d, props.timezone);
+              const h = props.holidays[d];
+              if (h?.closed) return (
+                <button key={d} type="button" role="radio" aria-checked={false} aria-disabled="true" disabled title={`Feriado: ${h.name} (fechado)`}
+                  className="flex min-w-16 snap-start cursor-not-allowed flex-col items-center rounded-2xl border border-rose/60 bg-blush/70 px-3 py-2 text-sm text-brand/45">
+                  <span className="text-xs capitalize">{l.wd}</span><span className="font-medium line-through">{l.dm}</span>
+                  <span className="text-[10px] leading-tight">feriado</span>
+                </button>
+              );
               return (
                 <button key={d} role="radio" aria-checked={d === date} onClick={() => { setDate(d); setStartAt(""); }}
                   className={cx("flex min-w-16 snap-start flex-col items-center rounded-2xl border px-3 py-2 text-sm", d === date ? "border-brand bg-brand text-white" : "border-line bg-white")}>
                   <span className="text-xs capitalize opacity-80">{l.wd}</span><span className="font-medium">{l.dm}</span>
+                  {h && <span className="text-[10px] leading-tight opacity-80">feriado</span>}
                 </button>
               );
             })}
           </div>
+          {props.holidays[date] && !props.holidays[date].closed && <p className="mt-1 text-xs text-muted">{props.holidays[date].name}: feriado, mas com atendimento normal.</p>}
         </section>
       )}
 
@@ -153,6 +168,8 @@ export function BookingWizard(props: {
           {step(pros.length > 1 ? 4 : 3, "Horário")}
           {loadError ? <Notice tone="error">{loadError}</Notice> : slots === null ? (
             <p className="text-sm text-muted">Carregando horários…</p>
+          ) : holiday ? (
+            <Notice>Feriado ({holiday}): não abrimos neste dia. Escolha outra data.</Notice>
           ) : slots.length === 0 ? (
             <Notice>Nenhum horário livre neste dia. Experimente outro dia.</Notice>
           ) : (

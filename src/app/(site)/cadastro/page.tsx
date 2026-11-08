@@ -25,6 +25,7 @@ export default async function Cadastro({ searchParams }: { searchParams: Promise
               allowWhatsapp: c?.allowWhatsapp ?? true,
               allowMarketing: c?.allowMarketing ?? false,
               complete: !!c?.profileComplete,
+              address: { cep: c?.addressCep ?? "", street: c?.addressStreet ?? "", number: c?.addressNumber ?? "", complement: c?.addressComplement ?? "", district: c?.addressDistrict ?? "", city: c?.addressCity ?? "", state: c?.addressState ?? "" },
             }}
           />
         </div>

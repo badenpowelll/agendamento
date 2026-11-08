@@ -51,6 +51,12 @@ export const siteContentSchema = z.object({
       note: z.string().max(1000).default(""),
     })
     .prefault({}),
+  holidays: z
+    .object({
+      closeNational: z.boolean().default(true), // fechar a agenda online nos feriados nacionais
+      openDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(200).default([]), // feriados em que a gestora decidiu abrir
+    })
+    .prefault({}),
   legal: z.object({
     companyName: z.string().max(200).default(""),
     document: z.string().max(30).default(""), // CNPJ
