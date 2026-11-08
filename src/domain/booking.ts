@@ -129,6 +129,15 @@ export interface BookingInput {
   now?: Date;
 }
 
+/**
+ * Fila por profissional dentro da transação: reservas simultâneas para a mesma profissional
+ * entram uma de cada vez. Sem isso, inserções concorrentes na restrição EXCLUDE podem gerar
+ * deadlock no PostgreSQL (erro 500 em vez de "horário ocupado"). A trava é liberada no commit.
+ */
+async function lockProfessional(tx: TenantTx, professionalId: string) {
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${professionalId}))::text`;
+}
+
 async function enqueue(tx: TenantTx, msgs: PlannedMessage[]) {
   if (msgs.length === 0) return;
   await tx.outboxMessage.createMany({
@@ -172,6 +181,7 @@ export async function createBooking(tenantId: string, input: BookingInput, actor
 
   try {
     const appointment = await db.$transaction(async (tx) => {
+      await lockProfessional(tx, professionalId);
       const appt = await tx.appointment.create({
         data: {
           professionalId,
@@ -291,6 +301,7 @@ export async function rescheduleAppointment(
 
   try {
     return await db.$transaction(async (tx) => {
+      await lockProfessional(tx, professionalId);
       const r = await tx.appointment.updateMany({ where: { id: old.id, status: old.status }, data: { status: "RESCHEDULED" } });
       if (r.count !== 1) throw new DomainError("CONFLICT", "O agendamento foi alterado por outra pessoa. Atualize a página.");
       await tx.appointmentEvent.create({ data: { appointmentId: old.id, fromStatus: old.status, toStatus: "RESCHEDULED", actorType: actor.type, actorUserId: actor.userId ?? null } as never });
