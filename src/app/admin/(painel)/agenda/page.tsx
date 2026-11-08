@@ -4,7 +4,9 @@ import { requireStaff } from "@/lib/staff-session";
 import { forTenant } from "@/lib/tenant-db";
 import { addDays, dayRange, formatTime, isIsoDate, toLocalDate, weekdayOf } from "@/lib/time";
 import { STATUS_LABEL } from "@/domain/appointment-state";
-import { createTimeOff, staffBook } from "@/app/actions/admin";
+import { createTimeOff, setHolidayClosing, staffBook } from "@/app/actions/admin";
+import { holidaysInRange, loadHolidayRule } from "@/domain/holidays";
+import { HolidayToggle } from "@/components/holiday-toggle";
 import { AdminForm } from "@/components/admin-form";
 import { StatusControl } from "@/components/status-control";
 import { DeleteTimeOffButton } from "@/components/delete-timeoff-button";
@@ -38,6 +40,23 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
     db.service.findMany({ where: { active: true, durationMin: { gte: 5 } }, orderBy: { name: "asc" } }),
     db.customer.findMany({ orderBy: { name: "asc" }, take: 500, select: { id: true, name: true, phone: true } }),
   ]);
+
+  const [holidays, upcoming, holidayRule] = await Promise.all([
+    holidaysInRange(ctx.tenant.id, from, addDays(to, -1), db),
+    holidaysInRange(ctx.tenant.id, today, addDays(today, 120), db),
+    loadHolidayRule(ctx.tenant.id, db),
+  ]);
+  const fmtLong = (d: string) => new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long", timeZone: "UTC" }).format(new Date(`${d}T12:00:00Z`));
+  const holidayBanner = (d: string) => {
+    const h = holidays.get(d);
+    if (!h) return null;
+    return (
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-rose/60 bg-blush/70 px-4 py-2 text-sm">
+        <span><b>Feriado nacional:</b> {h.name} · {h.closed ? "agenda online fechada (encaixe pela equipe continua possível)" : "atendimento normal"}</span>
+        {ctx.role !== "STAFF" && <HolidayToggle date={d} closed={h.closed} />}
+      </div>
+    );
+  };
 
   const step = view === "dia" ? 1 : view === "semana" ? 7 : 30;
   const qs = (d: string, v: View = view) => `/admin/agenda?data=${d}&visao=${v}${sp.profissional ? `&profissional=${sp.profissional}` : ""}`;
@@ -86,10 +105,13 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
           {Array.from({ length: weekdayOf(from, tz) }).map((_, i) => <div key={`e${i}`} />)}
           {days.map((d) => {
             const n = (byDay.get(d) ?? []).filter((a) => a.status !== "CANCELLED").length;
+            const h = holidays.get(d);
             return (
-              <Link key={d} href={qs(d, "dia")} className={cx("rounded-lg border bg-white p-2", d === today ? "border-brand" : "border-line")}>
+              <Link key={d} href={qs(d, "dia")} title={h ? `${h.name}${h.closed ? " (fechado)" : " (aberto)"}` : undefined}
+                className={cx("rounded-lg border p-2", h?.closed ? "border-rose/60 bg-blush/70" : "bg-white", d === today ? "border-brand" : !h?.closed && "border-line")}>
                 <span className="block font-medium">{Number(d.slice(8))}</span>
                 <span className={cx("block", n ? "text-brand" : "text-muted/50")}>{n || "·"}</span>
+                {h && <span className="block truncate text-[10px] leading-tight text-brand/70">{h.name}</span>}
               </Link>
             );
           })}
@@ -98,6 +120,7 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
         days.map((d) => (
           <section key={d}>
             {view === "semana" && <h2 className="mb-1 text-sm font-medium capitalize"><Link href={qs(d, "dia")}>{fmtDay(d)}</Link></h2>}
+            {holidayBanner(d)}
             {(byDay.get(d) ?? []).length === 0 ? <EmptyState>Sem atendimentos.</EmptyState> : <Card className="divide-y divide-line p-0">{byDay.get(d)!.map(row)}</Card>}
           </section>
         ))
@@ -116,6 +139,29 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
           </Card>
         </section>
       )}
+
+      <Card>
+        <h2 className="mb-1 font-display text-lg">Feriados nacionais</h2>
+        <p className="mb-3 text-xs text-muted">Lista oficial consultada na BrasilAPI (se a consulta falhar, usamos o calendário calculado). Nos feriados fechados, o site não oferece horários; a equipe ainda pode fazer encaixe.</p>
+        {ctx.role !== "STAFF" && (
+          <AdminForm action={setHolidayClosing} submit="Salvar">
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="closeNational" defaultChecked={holidayRule.closeNational} className="accent-brand" /> Fechar a agenda online nos feriados nacionais</label>
+          </AdminForm>
+        )}
+        {upcoming.size === 0 ? <p className="mt-3 text-sm text-muted">Nenhum feriado nacional nos próximos 120 dias.</p> : (
+          <div className="mt-3 divide-y divide-line text-sm">
+            {[...upcoming.values()].map((h) => (
+              <div key={h.date} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span><Link className="inline-block hover:underline first-letter:uppercase" href={qs(h.date, "dia")}>{fmtLong(h.date)}</Link> · {h.name}</span>
+                <span className="flex items-center gap-3">
+                  <Badge tone={h.closed ? "bad" : "good"}>{h.closed ? "Fechado" : "Aberto"}</Badge>
+                  {ctx.role !== "STAFF" && holidayRule.closeNational && <HolidayToggle date={h.date} closed={h.closed} />}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

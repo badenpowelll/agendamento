@@ -16,14 +16,14 @@ export async function GET(req: NextRequest) {
   const ignore = sp.get("ignore") || undefined;
   try {
     const tenant = await getTenant();
-    const { available, taken } = await getSlotBoard(tenant.id, { serviceId, professionalId, date, ignoreAppointmentId: ignore });
+    const { available, taken, holiday } = await getSlotBoard(tenant.id, { serviceId, professionalId, date, ignoreAppointmentId: ignore });
     const slots = [
       ...available.map((s) => ({ startAt: s.startAt.toISOString(), label: formatTime(s.startAt, tenant.timezone), professionalIds: s.professionalIds, available: true })),
       // Horários ocupados aparecem desabilitados; não expõem quem reservou.
       ...taken.map((t) => ({ startAt: t.toISOString(), label: formatTime(t, tenant.timezone), professionalIds: [] as string[], available: false })),
     ].sort((a, b) => a.startAt.localeCompare(b.startAt));
     return NextResponse.json(
-      { timezone: tenant.timezone, slots },
+      { timezone: tenant.timezone, slots, holiday: holiday ?? null },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {

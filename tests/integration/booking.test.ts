@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
-import { createBooking, getAvailability, rescheduleAppointment, transitionAppointment } from "@/domain/booking";
+import { createBooking, getAvailability, getSlotBoard, rescheduleAppointment, transitionAppointment } from "@/domain/booking";
 import { SlotUnavailableError, DomainError } from "@/domain/errors";
 import { makeCustomer, makeTenant, NOW, resetDb, SLOT } from "../helpers";
 
@@ -67,6 +67,29 @@ describe("reserva sem conflito", () => {
     const { tenant, service } = await makeTenant("milly");
     await prisma.timeOff.create({ data: { tenantId: tenant.id, professionalId: null, startAt: new Date("2026-11-12T03:00:00Z"), endAt: new Date("2026-11-13T03:00:00Z"), reason: "Feriado" } });
     expect(await getAvailability(tenant.id, { serviceId: service.id, date: "2026-11-12", now: NOW })).toEqual([]);
+  });
+});
+
+describe("feriados nacionais", () => {
+  it("fecha a agenda online no feriado; a gestora pode abrir o dia; encaixe continua possível", async () => {
+    const { tenant, service, professional } = await makeTenant("milly");
+    // 15/11/2026, Proclamação da República
+    const board = await getSlotBoard(tenant.id, { serviceId: service.id, date: "2026-11-15", now: NOW });
+    expect(board).toEqual({ available: [], taken: [], holiday: "Proclamação da República" });
+    const c = await makeCustomer(tenant.id);
+    const at = new Date("2026-11-15T13:00:00Z");
+    await expect(createBooking(tenant.id, { serviceId: service.id, startAt: at, customerId: c.id, idempotencyKey: "h1", now: NOW }, { type: "CUSTOMER" })).rejects.toBeInstanceOf(SlotUnavailableError);
+    const fit = await createBooking(tenant.id, { serviceId: service.id, professionalId: professional.id, startAt: at, customerId: c.id, idempotencyKey: "h2", now: NOW, allowOutsideHours: true }, { type: "STAFF" });
+    expect(fit.created).toBe(true);
+
+    await prisma.siteContent.create({ data: { tenantId: tenant.id, data: { holidays: { closeNational: true, openDates: ["2026-11-15"] } } } });
+    expect((await getAvailability(tenant.id, { serviceId: service.id, date: "2026-11-15", now: NOW })).length).toBeGreaterThan(0);
+  });
+
+  it("com o fechamento desligado, o feriado tem horários normais", async () => {
+    const { tenant, service } = await makeTenant("milly");
+    await prisma.siteContent.create({ data: { tenantId: tenant.id, data: { holidays: { closeNational: false, openDates: [] } } } });
+    expect((await getAvailability(tenant.id, { serviceId: service.id, date: "2026-11-20", now: NOW })).length).toBeGreaterThan(0);
   });
 });
 

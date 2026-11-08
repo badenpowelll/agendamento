@@ -4,7 +4,8 @@
 
 | Método e rota | Acesso | Descrição |
 | --- | --- | --- |
-| `GET /api/availability?serviceId&date=YYYY-MM-DD[&professionalId][&ignore]` | Público (limite de 120/min por IP) | Horários livres. Resposta: `{ timezone, slots: [{ startAt, label, professionalIds }] }` |
+| `GET /api/availability?serviceId&date=YYYY-MM-DD[&professionalId][&ignore]` | Público (limite de 120/min por IP) | Horários livres. Resposta: `{ timezone, slots: [{ startAt, label, professionalIds, available }], holiday }` (`holiday` = nome do feriado nacional quando a agenda online está fechada no dia) |
+| `GET /api/cep/{cep}` | Público (limite de 30/min por IP) | Endereço do CEP pela BrasilAPI (`/api/cep/v2`). Resposta: `{ cep, street, neighborhood, city, state }`; 404 CEP inexistente; 503 BrasilAPI fora do ar |
 | `POST /api/cron/outbox` | `Authorization: Bearer $CRON_SECRET` | Processa a fila de mensagens. Resposta: `{ claimed, sent, skipped, failed, dead }` |
 | `GET/POST /api/auth/*` | Auth.js | Login Google |
 
@@ -26,3 +27,8 @@ Todas validam entrada com Zod e verificam sessão e papel no servidor.
 ## Erros de negócio
 
 `DomainError(code, message)` com mensagem pronta para a usuária. `SLOT_UNAVAILABLE` indica que o horário foi tomado; a tela recarrega os horários.
+
+## Serviços externos
+
+- **Feriados nacionais**: BrasilAPI `GET /api/feriados/v1/{ano}`, guardado em memória por 24 h por ano. Se a API falhar, usa o calendário calculado (datas fixas + Páscoa) e tenta de novo em 10 min. A regra fica no conteúdo do site (`holidays.closeNational`, `holidays.openDates`) e é editada em Painel > Agenda.
+- **CEP**: BrasilAPI `GET /api/cep/v2/{cep}`, em cache por 7 dias. Só rua, bairro, cidade e UF são usados; coordenadas são descartadas.

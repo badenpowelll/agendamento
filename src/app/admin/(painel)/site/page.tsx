@@ -4,6 +4,7 @@ import { formatPhoneBR } from "@/lib/phone";
 import { saveSiteContent } from "@/app/actions/admin";
 import { AdminForm } from "@/components/admin-form";
 import { Card, Field, Input, PageTitle, Textarea } from "@/components/ui";
+import { CepField } from "@/components/cep-field";
 
 export default async function SiteEditor() {
   await requireStaff("ADMIN");
@@ -37,7 +38,10 @@ export default async function SiteEditor() {
             <Field label="Link do Google Maps"><Input name="mapsUrl" defaultValue={s.contact.mapsUrl} /></Field>
             <Field label="Link para avaliar no Google" hint="Perfil da clínica no Google. Vazio = sem botão de avaliação."><Input name="reviewUrl" defaultValue={s.contact.reviewUrl} /></Field>
           </div>
-          <Field label="Endereço completo"><Input name="address" defaultValue={s.contact.address} /></Field>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Field label="Buscar pelo CEP" hint="Preenche o endereço abaixo."><CepField name="cepLookup" compose="address" /></Field>
+            <div className="sm:col-span-3"><Field label="Endereço completo" hint="Confira e inclua o número."><Input name="address" defaultValue={s.contact.address} /></Field></div>
+          </div>
           <Field label="Horário de funcionamento (texto exibido no site)"><Textarea name="hoursText" defaultValue={s.contact.hoursText} rows={3} /></Field>
         </Card>
         <Card className="space-y-4">
