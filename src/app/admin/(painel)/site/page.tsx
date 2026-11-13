@@ -19,6 +19,12 @@ export default async function SiteEditor() {
             <Field label="Cor principal"><Input name="primaryColor" type="color" defaultValue={s.brand.primaryColor} className="h-11 p-1" /></Field>
           </div>
           <Field label="Frase de apresentação"><Input name="tagline" defaultValue={s.brand.tagline} /></Field>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <Field label="“aqui na/no”" hint="aqui na Milly / aqui no Salão"><select name="placeWord" defaultValue={s.brand.placeWord} className="h-11 w-full rounded-xl border border-line bg-white px-3"><option value="na">na</option><option value="no">no</option></select></Field>
+            <Field label="Segmento" hint="Linha abaixo do nome, ex.: Salão de Beleza"><Input name="segment" defaultValue={s.brand.segment} maxLength={60} /></Field>
+            <Field label="Saudação no WhatsApp" hint="“Olá, ___!”. Vazio = “Olá!”"><Input name="greetingName" defaultValue={s.brand.greetingName} maxLength={40} /></Field>
+            <Field label="Palavra do retorno" hint="“sua próxima ___”, ex.: visita"><Input name="visitWord" defaultValue={s.brand.visitWord} maxLength={40} /></Field>
+          </div>
           <Field label="Endereço da logo (https://…)"><Input name="logoUrl" defaultValue={s.brand.logoUrl} /></Field>
             <Field label="Marca d’água (foto ao fundo das páginas)" hint="https://… ou /marca/arquivo.jpg. Deixe vazio para não usar."><Input name="watermarkUrl" defaultValue={s.brand.watermarkUrl} /></Field>
         </Card>
@@ -35,7 +41,7 @@ export default async function SiteEditor() {
             <Field label="E-mail"><Input name="email" type="email" defaultValue={s.contact.email} /></Field>
             <Field label="Instagram (link)"><Input name="instagram" defaultValue={s.contact.instagram} /></Field>
             <Field label="Link do Google Maps"><Input name="mapsUrl" defaultValue={s.contact.mapsUrl} /></Field>
-            <Field label="Link para avaliar no Google" hint="Perfil da clínica no Google. Vazio = sem botão de avaliação."><Input name="reviewUrl" defaultValue={s.contact.reviewUrl} /></Field>
+            <Field label="Link para avaliar no Google" hint="Perfil do estabelecimento no Google. Vazio = sem botão de avaliação."><Input name="reviewUrl" defaultValue={s.contact.reviewUrl} /></Field>
           </div>
           <Field label="Endereço completo"><Input name="address" defaultValue={s.contact.address} /></Field>
           <Field label="Horário de funcionamento (texto exibido no site)"><Textarea name="hoursText" defaultValue={s.contact.hoursText} rows={3} /></Field>

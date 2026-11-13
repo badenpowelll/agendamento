@@ -3,12 +3,12 @@
 @theme {
   --color-brand: var(--brand, #e0457b);
   --color-brand-dark: color-mix(in oklab, var(--brand, #e0457b) 80%, black);
-  --color-ink: #2d1f26;
-  --color-blush: #fde7ef;
-  --color-rose: #f7c6d6;
-  --color-muted: #7a6470;
-  --color-line: #f5dbe5;
-  --color-cream: #fff7fa;
+  --color-ink: var(--ink, #2d1f26);
+  --color-blush: var(--blush, #fde7ef);
+  --color-rose: var(--rose, #f7c6d6);
+  --color-muted: var(--muted, #7a6470);
+  --color-line: var(--line, #f5dbe5);
+  --color-cream: var(--cream, #fff7fa);
   --font-display: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
 }

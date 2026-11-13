@@ -73,6 +73,6 @@ export async function returnList(tenantId: string, now = new Date()): Promise<{ 
   return { due: due.sort(byNotice), soon: soon.sort(byNotice) };
 }
 
-export function returnMessage(firstName: string, businessName: string, bookingUrl: string): string {
-  return `Oi, ${firstName}! Tudo bem? Já está chegando a hora da sua próxima depilação aqui na ${businessName}. Quer agendar? É só escolher o melhor horário: ${bookingUrl}`;
+export function returnMessage(firstName: string, businessName: string, bookingUrl: string, visitWord = "depilação", placeWord: "na" | "no" = "na"): string {
+  return `Oi, ${firstName}! Tudo bem? Já está chegando a hora da sua próxima ${visitWord || "visita"} aqui ${placeWord} ${businessName}. Quer agendar? É só escolher o melhor horário: ${bookingUrl}`;
 }
