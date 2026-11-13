@@ -10,4 +10,8 @@ describe("mensagem do WhatsApp com contexto", () => {
     expect(composeWhatsappMessage({ reason: "valor", service: "depilação" })).toBe("Olá, tudo bem?\nGostaria de saber o valor para depilação.");
     expect(composeWhatsappMessage({ name: "  ", reason: "valor" })).toBe("Olá, tudo bem?\nGostaria de saber o valor dos serviços.");
   });
+  it("outro estabelecimento: saudação configurável", () => {
+    expect(composeWhatsappMessage({ name: "Ana", reason: "agendar", service: "Escova", greetingName: "" })).toBe("Olá! Aqui quem fala é Ana.\nGostaria de agendar Escova.");
+    expect(composeWhatsappMessage({ name: "Ana", reason: "valor", greetingName: "Dunas" })).toBe("Olá, Dunas! Aqui quem fala é Ana.\nGostaria de saber o valor dos serviços.");
+  });
 });
