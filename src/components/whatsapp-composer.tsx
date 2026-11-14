@@ -10,7 +10,7 @@ const NAME_KEY = "wa-name";
  * chegar com contexto ("Olá, Milly! Aqui quem fala é Ana. Queria agendar Virilha completa.").
  * Intercepta qualquer link com data-wa; sem JavaScript, o link abre o WhatsApp normalmente.
  */
-export function WhatsappComposer(props: { phone: string; services: { name: string; category: string | null }[]; defaultName?: string }) {
+export function WhatsappComposer(props: { phone: string; services: { name: string; category: string | null }[]; defaultName?: string; greetingName?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [name, setName] = useState(props.defaultName ?? "");
   const [reason, setReason] = useState<WaReason>("valor");
@@ -42,7 +42,7 @@ export function WhatsappComposer(props: { phone: string; services: { name: strin
   const send = (e: React.FormEvent) => {
     e.preventDefault();
     try { localStorage.setItem(NAME_KEY, name.trim()); } catch {}
-    const text = composeWhatsappMessage({ name, reason, service, note });
+    const text = composeWhatsappMessage({ name, reason, service, note, greetingName: props.greetingName });
     window.open(`https://wa.me/${props.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
     dialog.current?.close();
     setNote("");
@@ -88,7 +88,7 @@ export function WhatsappComposer(props: { phone: string; services: { name: strin
           <span className="font-medium">Mensagem (opcional)</span>
           <textarea className={field} rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={400} placeholder="Ex.: tem horário no sábado?" />
         </label>
-        <p className="whitespace-pre-line rounded-2xl bg-white p-3 text-xs text-muted">{composeWhatsappMessage({ name, reason, service, note })}</p>
+        <p className="whitespace-pre-line rounded-2xl bg-white p-3 text-xs text-muted">{composeWhatsappMessage({ name, reason, service, note, greetingName: props.greetingName })}</p>
         <button type="submit" className="w-full rounded-full bg-[#25d366] py-3 font-medium text-white hover:brightness-95">Abrir o WhatsApp</button>
       </form>
     </dialog>

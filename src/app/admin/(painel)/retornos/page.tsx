@@ -17,7 +17,7 @@ export default async function Retornos() {
   const tz = ctx.tenant.timezone;
   const now = Date.now();
   const bookingUrl = `${env.appUrl}/agendar`;
-  const link = (r: ReturnItem) => (r.phone ? whatsappLink(r.phone, returnMessage(r.name.split(" ")[0], site.brand.displayName, bookingUrl)) : null);
+  const link = (r: ReturnItem) => (r.phone ? whatsappLink(r.phone, returnMessage(r.name.split(" ")[0], site.brand.displayName, bookingUrl, site.brand.visitWord, site.brand.placeWord)) : null);
 
   const row = (r: ReturnItem, showWhen: "due" | "soon") => {
     const daysSince = Math.floor((now - r.lastAt.getTime()) / DAY);
@@ -73,7 +73,7 @@ export default async function Retornos() {
         )}
       </Card>
       <p className="text-xs text-muted">
-        Quem já tem horário marcado não aparece aqui. Mensagem enviada: “{returnMessage("Nome", site.brand.displayName, bookingUrl)}”
+        Quem já tem horário marcado não aparece aqui. Mensagem enviada: “{returnMessage("Nome", site.brand.displayName, bookingUrl, site.brand.visitWord, site.brand.placeWord)}”
       </p>
     </div>
   );

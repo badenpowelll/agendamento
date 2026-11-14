@@ -7,11 +7,11 @@ export const WA_REASONS: { id: WaReason; label: string }[] = [
 ];
 
 /**
- * Monta a mensagem que chega no WhatsApp da Milly.
+ * Monta a mensagem que chega no WhatsApp do estabelecimento (saudação em brand.greetingName).
  * Com nome: "Olá, Milly! Aqui quem fala é Ana. Gostaria de agendar Virilha completa."
  * Sem nome (genérica): "Olá, tudo bem? Gostaria de saber o valor para depilação."
  */
-export function composeWhatsappMessage(input: { name?: string; reason: WaReason; service?: string; note?: string }): string {
+export function composeWhatsappMessage(input: { name?: string; reason: WaReason; service?: string; note?: string; greetingName?: string }): string {
   const name = (input.name ?? "").trim().replace(/\s+/g, " ");
   const service = input.service?.trim();
   const what =
@@ -20,7 +20,8 @@ export function composeWhatsappMessage(input: { name?: string; reason: WaReason;
       : input.reason === "valor"
         ? `Gostaria de saber o valor ${service ? `para ${service}` : "dos serviços"}.`
         : `Gostaria de uma informação${service ? ` sobre ${service}` : ""}.`;
-  const lines = [name ? `Olá, Milly! Aqui quem fala é ${name}.` : "Olá, tudo bem?", what];
+  const greet = (input.greetingName ?? "Milly").trim();
+  const lines = [name ? `Olá${greet ? `, ${greet}` : ""}! Aqui quem fala é ${name}.` : "Olá, tudo bem?", what];
   const note = input.note?.trim();
   if (note) lines.push(note);
   return lines.join("\n");

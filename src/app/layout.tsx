@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { getSite } from "@/lib/site";
+import { paletteVars } from "@/lib/palette";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: "swap" });
@@ -16,12 +17,15 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#e0457b" };
+export async function generateViewport(): Promise<Viewport> {
+  const site = await getSite();
+  return { width: "device-width", initialScale: 1, themeColor: site.brand.primaryColor };
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const site = await getSite();
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`} style={{ ["--brand" as string]: site.brand.primaryColor }}>
+    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`} style={{ ["--brand" as string]: site.brand.primaryColor, ...paletteVars(site.brand.primaryColor) }}>
       <body className="min-h-dvh antialiased">
         {site.brand.watermarkUrl && (
           <div

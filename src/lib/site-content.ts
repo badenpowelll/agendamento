@@ -11,6 +11,10 @@ export const siteContentSchema = z.object({
     logoUrl: z.string().max(500).default("/marca/logo-milly.png"), // logomarca oficial (enviada pelo Baden em 05/11/2026)
     watermarkUrl: z.string().max(500).default("/marca/marca-dagua.png"), // foto clarinha ao fundo de todas as páginas
     primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#e0457b"),
+    segment: z.string().max(60).default("Epilação e Estética"), // linha abaixo do nome (ex.: Salão de Beleza)
+    greetingName: z.string().max(40).default("Milly"), // "Olá, Milly!" na mensagem do WhatsApp; vazio = "Olá!"
+    visitWord: z.string().max(40).default("depilação"), // "sua próxima ___" no lembrete de retorno
+    placeWord: z.enum(["na", "no"]).default("na"), // "aqui ___ Milly Rodrigues" / "aqui no Salão Dunas"
   }),
   about: z.object({
     title: z.string().max(120).default(""),

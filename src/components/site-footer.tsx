@@ -50,7 +50,7 @@ export async function SiteFooter() {
           <WhatsappIcon />
         </a>
       )}
-      {site.contact.whatsapp && <WhatsappComposer phone={site.contact.whatsapp} services={services} defaultName={ctx?.customer?.name} />}
+      {site.contact.whatsapp && <WhatsappComposer phone={site.contact.whatsapp} services={services} defaultName={ctx?.customer?.name} greetingName={site.brand.greetingName} />}
     </footer>
   );
 }

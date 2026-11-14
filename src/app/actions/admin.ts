@@ -213,7 +213,7 @@ export async function saveSiteContent(_p: AdminState, f: FormData): Promise<Admi
     if (whatsapp === null) throw new DomainError("PHONE", "WhatsApp inválido.");
     const policiesChanged = current.policies.privacy !== str(f, "privacy") || current.policies.terms !== str(f, "terms");
     const data = siteContentSchema.parse({
-      brand: { displayName: str(f, "displayName") || "Milly Rodrigues", tagline: str(f, "tagline"), logoUrl: str(f, "logoUrl"), watermarkUrl: str(f, "watermarkUrl"), primaryColor: str(f, "primaryColor") || "#e0457b" },
+      brand: { ...current.brand, displayName: str(f, "displayName") || ctx.tenant.name, tagline: str(f, "tagline"), logoUrl: str(f, "logoUrl"), watermarkUrl: str(f, "watermarkUrl"), primaryColor: str(f, "primaryColor") || current.brand.primaryColor, ...(f.has("segment") ? { segment: str(f, "segment"), greetingName: str(f, "greetingName"), visitWord: str(f, "visitWord"), placeWord: str(f, "placeWord") === "no" ? "no" : "na" } : {}) },
       about: { title: str(f, "aboutTitle"), text: str(f, "aboutText") },
       contact: { whatsapp, whatsappMessage: str(f, "whatsappMessage"), instagram: str(f, "instagram"), email: str(f, "email"), address: str(f, "address"), mapsUrl: str(f, "mapsUrl"), reviewUrl: str(f, "reviewUrl"), hoursText: str(f, "hoursText") },
       gallery: lines(str(f, "gallery")).map((l) => { const [url, alt = ""] = l.split("|").map((x) => x.trim()); return { url, alt, authorized }; }),
